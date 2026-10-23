@@ -1,0 +1,53 @@
+/* Ambient loops for the countdown. All of it is skipped under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .lantern {
+    animation: rise var(--dur) linear var(--delay) infinite;
+    will-change: transform;
+  }
+  .lantern > svg {
+    animation: drift 4.6s ease-in-out infinite alternate;
+  }
+  .glint {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: glint 5.2s ease-in-out infinite;
+  }
+}
+
+@keyframes rise {
+  0% {
+    transform: translate3d(0, 75vh, 0);
+    opacity: 0;
+  }
+  12%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--dx), -85vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(-4px) rotate(-4deg);
+  }
+  to {
+    transform: translateX(4px) rotate(4deg);
+  }
+}
+
+
+@keyframes glint {
+  0%,
+  72%,
+  100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  84% {
+    opacity: 1;
+    transform: scale(1.1) rotate(45deg);
+  }
+}
