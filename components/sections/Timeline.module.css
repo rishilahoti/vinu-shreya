@@ -34,6 +34,29 @@
   height: 100%;
 }
 
+/* The plain stack (phones, tablets): each leaf is dealt in from alternate sides as it scrolls into view,
+   settling with the page's spring. Never on the deck, where GSAP owns the cards' transform. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    :not(.deck) > .wrap .item {
+      animation: deal linear both;
+      animation-timing-function: var(--ease-spring);
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+    :not(.deck) > .wrap .item:nth-child(even) {
+      --from: 12px;
+      --tilt: 2deg;
+    }
+  }
+}
+/* Mostly a rise with a tilt: a wide sideways drift would push the text against the phone's edge. */
+@keyframes deal {
+  from {
+    transform: translate(var(--from, -12px), 48px) rotate(var(--tilt, -2deg));
+  }
+}
+
 /* A folded leaf: its visible edge is the button that brings it back. */
 .spine {
   position: absolute;

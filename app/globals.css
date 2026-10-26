@@ -30,6 +30,8 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* A spring with a small bounce (about 0.2): overshoots by under 2% and settles. */
+  --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
 }
 
 @theme inline {
@@ -154,6 +156,26 @@ button.link {
 }
 button.link:active {
   scale: 0.97;
+}
+
+/* Each leaf of the card slides up onto the table as it scrolls in and settles with a small bounce.
+   Scroll-driven, so it follows the visitor's scroll and runs off the main thread; browsers without
+   view timelines simply show the leaf in place. The ceremonies leaf is left out: GSAP measures its
+   position for the pinned deck, and a transform there would shift every step. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    main > :not(:first-child, #ceremonies) {
+      animation: leaf-in linear both;
+      animation-timing-function: var(--ease-spring);
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+@keyframes leaf-in {
+  from {
+    transform: translateY(72px) scale(0.97);
+  }
 }
 
 /* Sections scrolled well out of view rest their drawings (RevealObserver sets data-rest). */

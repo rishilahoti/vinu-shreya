@@ -78,7 +78,8 @@ export default function Timeline() {
         sec.classList.add(s.deck);
         layout();
         // Card n travels from its place in the row to its spine slot, arriving at step n.
-        const tl = gsap.timeline({ defaults: { ease: "none" } });
+        // State follows the cards as drawn (the scrub lags the scroll), so a spine is named only once it has folded.
+        const tl = gsap.timeline({ defaults: { ease: "none" }, onUpdate: () => show(tl.progress()) });
         items.forEach((el, n) => {
           if (n) tl.fromTo(el, { x: () => n * C + off(n) }, { x: () => n * S + off(n), duration: n }, 0);
           // A leaf's print fades in step with the scroll, before the next leaf's edge reaches its text
@@ -92,10 +93,10 @@ export default function Timeline() {
           start: "top top",
           end: "bottom bottom",
           animation: tl,
-          scrub: true,
+          // Cards glide after the scroll instead of sticking to it, and each settles into place with a small bounce.
+          scrub: 0.8,
           invalidateOnRefresh: true,
-          snap: { snapTo: 1 / last, duration: { min: 0.2, max: 0.5 }, delay: 0.1, ease: "power1.inOut" },
-          onUpdate: (self) => show(self.progress),
+          snap: { snapTo: 1 / last, duration: { min: 0.35, max: 0.8 }, delay: 0.08, ease: "back.out(1.4)" },
           onRefresh: (self) => show(self.progress),
         });
         ScrollTrigger.addEventListener("refreshInit", layout);
