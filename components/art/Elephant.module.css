@@ -1,0 +1,63 @@
+/* Every moving part sits on a pivot frame centred on its joint (see Pivot in Elephant.tsx),
+   so fill-box 50% 50% is the trunk joint, the ear's root, the tail's root. */
+.eleTrunk1,
+.eleTrunk2,
+.eleTrunk3,
+.eleTrunk4,
+.eleEar,
+.eleTail {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The curl travels down the trunk: each joint a little later and further than the one above. */
+  .eleTrunk1 {
+    animation: eleTrunk1 5.2s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .eleTrunk2 {
+    animation: eleTrunk2 5.2s cubic-bezier(0.37, 0, 0.63, 1) -0.35s infinite alternate;
+  }
+  .eleTrunk3 {
+    animation: eleTrunk3 5.2s cubic-bezier(0.37, 0, 0.63, 1) -0.7s infinite alternate;
+  }
+  .eleTrunk4 {
+    animation: eleTrunk4 5.2s cubic-bezier(0.37, 0, 0.63, 1) -1.05s infinite alternate;
+  }
+  .eleEar {
+    animation: eleEar 3.4s cubic-bezier(0.37, 0, 0.63, 1) -1.3s infinite alternate;
+  }
+  .eleTail {
+    animation: eleTail 4.6s cubic-bezier(0.37, 0, 0.63, 1) -0.8s infinite;
+  }
+}
+
+@keyframes eleTrunk1 {
+  from { transform: rotate(3deg); }
+  to { transform: rotate(-5deg); }
+}
+@keyframes eleTrunk2 {
+  from { transform: rotate(4deg); }
+  to { transform: rotate(-16deg); }
+}
+@keyframes eleTrunk3 {
+  from { transform: rotate(6deg); }
+  to { transform: rotate(-28deg); }
+}
+@keyframes eleTrunk4 {
+  from { transform: rotate(8deg); }
+  to { transform: rotate(-40deg); }
+}
+/* The ear folds back towards the head and opens again. */
+@keyframes eleEar {
+  from { transform: scaleX(1) rotate(0deg); }
+  to { transform: scaleX(0.84) rotate(-3deg); }
+}
+/* Hangs still, then two flicks. */
+@keyframes eleTail {
+  0%, 40% { transform: rotate(0deg); }
+  52% { transform: rotate(12deg); }
+  62% { transform: rotate(-5deg); }
+  72% { transform: rotate(9deg); }
+  86%, 100% { transform: rotate(0deg); }
+}

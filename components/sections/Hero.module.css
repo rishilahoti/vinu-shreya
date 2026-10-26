@@ -1,0 +1,68 @@
+/* Slow crossfade: the incoming view fades in over the held one, like light shifting in a room. */
+.view {
+  object-fit: cover;
+  transition: opacity 1600ms cubic-bezier(0.37, 0, 0.63, 1);
+}
+
+/* Load sequence, settled by 1.6s. Everything is painted on the first frame; this only adds arrival.
+   Hidden states need .js, and fill-mode backwards hands the element back to its own styles after
+   (so the button's press scale still works). */
+@media (prefers-reduced-motion: no-preference) {
+  :global(.js) .card {
+    animation: rise 600ms var(--ease-out) backwards;
+  }
+  /* Toran and bells drop out from under the band and settle, no overshoot. */
+  :global(.js) .drop {
+    animation: drop 900ms var(--ease-out) backwards;
+    animation-delay: calc(200ms + var(--i, 0) * 80ms);
+  }
+  :global(.js) .rise {
+    animation: rise 600ms var(--ease-out) backwards;
+    animation-delay: calc(300ms + var(--i, 0) * 80ms);
+  }
+  /* The first view opens from the centre like palace doors, settling from a slight zoom. */
+  :global(.js) .open {
+    animation:
+      open 1100ms var(--ease-in-out) 100ms backwards,
+      settle 1400ms var(--ease-out) 100ms backwards;
+  }
+  :global(.js) .late {
+    animation: fade 700ms var(--ease-out) backwards;
+    animation-delay: calc(800ms + var(--i, 0) * 80ms);
+  }
+}
+
+/* Reduced motion keeps the fade and drops the travel. */
+@media (prefers-reduced-motion: reduce) {
+  :global(.js) .card,
+  :global(.js) .open {
+    animation: fade 400ms ease backwards;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+@keyframes drop {
+  from {
+    transform: translateY(-100%);
+  }
+}
+@keyframes open {
+  from {
+    clip-path: inset(0 50%);
+  }
+}
+@keyframes settle {
+  from {
+    transform: scale(1.08);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}

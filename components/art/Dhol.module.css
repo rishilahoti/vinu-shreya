@@ -1,0 +1,42 @@
+/* Each stick sits on a pivot frame centred on its grip, the drum on one centred on the shell
+   (see Pivot in Dhol.tsx), so fill-box 50% 50% is the grip or the drum's centre. */
+.dholDrum,
+.dholDagga,
+.dholThilli {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+/* One bar every second: dagga on the beat, thilli on the off-beat; the drum swells on both. */
+@media (prefers-reduced-motion: no-preference) {
+  .dholDrum {
+    animation: dholPulse 1s linear infinite;
+  }
+  .dholDagga {
+    animation: dholDagga 1s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  .dholThilli {
+    animation: dholThilli 1s cubic-bezier(0.37, 0, 0.63, 1) -0.5s infinite;
+  }
+}
+
+/* Contact at 0%: the stick snaps off the head, hangs, then speeds up into the next stroke
+   (a strike that eased into the skin would read as a tap, not a beat). */
+@keyframes dholDagga {
+  0%, 100% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  24% { transform: rotate(16deg); }
+  70% { transform: rotate(14deg); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45); }
+}
+@keyframes dholThilli {
+  0%, 100% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  24% { transform: rotate(-18deg); }
+  70% { transform: rotate(-15deg); animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.45); }
+}
+@keyframes dholPulse {
+  0%, 100% { transform: scale(1.035); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  16% { transform: scale(1); }
+  46% { transform: scale(1); }
+  50% { transform: scale(1.025); animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+  66% { transform: scale(1); }
+  96% { transform: scale(1); }
+}

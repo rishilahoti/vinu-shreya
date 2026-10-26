@@ -1,0 +1,59 @@
+/* Each flame sits on a pivot frame centred on its root (see Pivot in SacredFire.tsx),
+   so fill-box 50% 50% is where it leaves the wood. Duration and delay are set per flame inline. */
+.fireA,
+.fireB,
+.fireC,
+.fireEmber {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .fireA {
+    animation: fireFlickA 3s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  .fireB {
+    animation: fireFlickB 3s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  .fireC {
+    animation: fireFlickC 3s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  .fireEmber {
+    animation: fireRise 4s cubic-bezier(0.61, 1, 0.88, 1) infinite;
+  }
+}
+
+/* Irregular stops so no two flames, and no two passes of one flame, look alike. */
+@keyframes fireFlickA {
+  0%, 100% { transform: scale(1, 1) skewX(0deg) rotate(0deg); }
+  14% { transform: scale(0.97, 1.07) skewX(-4deg) rotate(1deg); }
+  31% { transform: scale(1.03, 0.93) skewX(3deg) rotate(-1.5deg); }
+  47% { transform: scale(0.98, 1.05) skewX(-2deg) rotate(2deg); }
+  66% { transform: scale(1.02, 0.95) skewX(5deg) rotate(-1deg); }
+  83% { transform: scale(0.97, 1.08) skewX(-3deg) rotate(0.5deg); }
+}
+@keyframes fireFlickB {
+  0%, 100% { transform: scale(1, 1) skewX(0deg) rotate(0deg); }
+  11% { transform: scale(1.03, 0.94) skewX(4deg) rotate(-2deg); }
+  29% { transform: scale(0.96, 1.08) skewX(-5deg) rotate(1.5deg); }
+  52% { transform: scale(1.02, 0.96) skewX(2deg) rotate(-0.5deg); }
+  71% { transform: scale(0.98, 1.06) skewX(-3deg) rotate(2.5deg); }
+  88% { transform: scale(1.03, 0.95) skewX(3deg) rotate(-1deg); }
+}
+@keyframes fireFlickC {
+  0%, 100% { transform: scale(1, 1) skewX(0deg) rotate(0deg); }
+  18% { transform: scale(0.97, 1.06) skewX(3deg) rotate(2deg); }
+  36% { transform: scale(1.02, 0.92) skewX(-4deg) rotate(-1deg); }
+  58% { transform: scale(0.96, 1.09) skewX(5deg) rotate(-2.5deg); }
+  77% { transform: scale(1.03, 0.96) skewX(-2deg) rotate(1deg); }
+  91% { transform: scale(0.99, 1.04) skewX(2deg) rotate(0deg); }
+}
+/* A spark leaves the flame, drifts sideways, shrinks and fades. Its drawn spot is mid-flight,
+   so the still drawing keeps a few sparks in the air; the climb ends 24 units above it so the
+   highest spark (y 30) never leaves the viewBox while it is still visible. */
+@keyframes fireRise {
+  0% { transform: translate(0, 56px) scale(1); opacity: 0; }
+  18% { opacity: 1; }
+  70% { opacity: 0.9; }
+  100% { transform: translate(var(--dx, 0), -24px) scale(0.6); opacity: 0; }
+}

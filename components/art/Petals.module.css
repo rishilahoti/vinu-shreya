@@ -1,0 +1,47 @@
+/* The field is a size container so a petal can fall 110cqh: the container's height, not its own. */
+.petalsField {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: size;
+}
+
+/* At rest (reduced motion, or `still`): scattered where they lie. */
+.petalsPetal {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  width: var(--w);
+  height: var(--w);
+  translate: 0 calc(var(--y) * 1cqh);
+  transform: rotate(var(--r));
+}
+
+/* Two animations on one node, on two different properties: `translate` falls at a steady speed,
+   `transform` swings side to side and rocks. Both translations stay in screen space. */
+@media (prefers-reduced-motion: no-preference) {
+  .petalsFall {
+    animation:
+      petalsFallKf var(--dur) linear var(--delay) infinite,
+      petalsDriftKf var(--sdur) cubic-bezier(0.37, 0, 0.63, 1) var(--sdelay) infinite alternate;
+  }
+}
+
+@keyframes petalsFallKf {
+  from {
+    translate: 0 -32px;
+  }
+  to {
+    translate: 0 110cqh;
+  }
+}
+
+@keyframes petalsDriftKf {
+  from {
+    transform: translateX(calc(var(--a) * -1)) rotate(var(--r)) rotateX(0deg);
+  }
+  to {
+    transform: translateX(var(--a)) rotate(calc(var(--r) + var(--spin))) rotateX(55deg);
+  }
+}

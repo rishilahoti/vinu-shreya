@@ -1,115 +1,252 @@
 @import "tailwindcss";
 
+/* The kankotri: ivory card stock (paper) on the Pink City (ground), printed in peacock ink, marigold for the one action.
+   Colours are utilities too: bg-paper, text-ink, bg-ground, bg-field, text-field-ink, bg-accent… */
 @theme {
-  /* Jodhpur dusk indigo base, marigold primary accent, rani pink secondary. */
-  --color-night: #12153a;
-  --color-night-deep: #0b0d27;
-  --color-plum: #3a1240;
-  --color-ivory: #f7ebd3;
-  --color-marigold: #f2a83b;
-  --color-rani: #e04a7e;
-  --color-sindoor: #c2312f;
-  --color-peacock: #1f7a7a;
+  --color-paper: #f4eee6;
+  --color-paper-2: #ebe3d8; /* one tone step down from paper, for surfaces on a card */
+  /* A rose pink, not terracotta: kept under 6° of hue so the Pink City never reads as rust. */
+  --color-ground: #da8e8c;
+  --color-ground-2: #cd7f7e;
+  --color-ink: #14332f;
+  --color-muted: #4e625e;
+  --color-field: #14332f;
+  --color-field-2: #1c4440; /* one tone step up from field */
+  --color-field-ink: #f4eee6;
+  --color-accent: #e39b2d;
+  --color-accent-ink: #14332f;
 
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Drawn illustration colours: SVG art only, never text or surfaces. */
+  --color-art-marigold: #e39b2d;
+  --color-art-sindoor: #b8322a;
+  --color-art-leaf: #3f7a4c;
+  --color-art-peacock: #1f5e8a;
+  --color-art-peacock-green: #2e7d6b;
+  --color-art-gold: #b8892e;
+  --color-art-haldi: #e8b83a;
+  --color-art-mehendi: #5e7a2e;
+  --color-art-rani: #c8487a;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  /* A spring with a small bounce (about 0.2): overshoots by under 2% and settles. */
+  --ease-spring: linear(0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.9%, 1);
 }
 
 @theme inline {
-  --font-display: var(--font-rozha), serif;
+  --font-display: var(--font-eczar), serif;
   --font-body: var(--font-eczar), serif;
 }
 
+:root {
+  /* Five type steps. Nothing on the page uses another size. */
+  --step-small: 0.875rem;
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2.25rem, 1.5rem + 3vw, 4rem);
+  --step-display: clamp(3.5rem, 1rem + 9vw, 10rem);
+
+  --margin: clamp(1rem, 2.5vw, 2rem);
+  --gutter: clamp(1rem, 2vw, 2rem);
+  --section: clamp(7.5rem, 12vw, 15rem);
+
+  --t-press: 160ms;
+  --t-hover: 200ms;
+  --t-reveal: 600ms;
+  --stagger: 80ms;
+}
+
 html {
-  background: var(--color-night-deep);
-  color: var(--color-ivory);
+  background: var(--color-ground);
+  color: var(--color-ink);
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   font-family: var(--font-body);
+  font-size: var(--step-body);
+  line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Without JS the palace doors would never open. */
-@media (scripting: none) {
-  .hero-doors {
-    display: none;
-  }
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  text-wrap: balance;
 }
 
-/* Intro sequence locks scroll until the palace doors open. */
-html.is-locked,
-html.is-locked body {
-  overflow: hidden;
+p {
+  text-wrap: pretty;
 }
+
+/* Type steps as classes, so sections never invent a sixth size. */
+.t-display { font-size: var(--step-display); line-height: 0.9; }
+.t-head { font-size: var(--step-head); line-height: 0.98; }
+.t-lead { font-size: var(--step-lead); line-height: 1.35; }
+.t-body { font-size: var(--step-body); line-height: 1.5; }
+.t-small { font-size: var(--step-small); line-height: 1.45; }
+
+.page-x { padding-inline: var(--margin); }
+.nums { font-variant-numeric: tabular-nums; }
 
 ::selection {
-  background: var(--color-rani);
-  color: var(--color-ivory);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-marigold);
+  outline: 2px solid var(--color-ink);
   outline-offset: 3px;
 }
-
-/* Film grain on a fixed layer only, never on scrolling content. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  opacity: 0.07;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+.on-field :focus-visible,
+.on-field:focus-visible {
+  outline-color: var(--color-accent);
 }
 
+/* The one button: square, solid marigold, ink text, presses down. */
+.button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 1.5rem;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform var(--t-press) var(--ease-out),
+    background-color var(--t-hover) ease;
+}
+.button:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .button:hover {
+    background: #eaa944;
+  }
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  transition: text-decoration-color var(--t-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    text-decoration-color: currentColor;
+  }
+}
+/* A button set as a link still presses. */
+button.link {
+  transform-origin: 0 50%;
+  transition:
+    scale var(--t-press) var(--ease-out),
+    text-decoration-color var(--t-hover) ease;
+}
+button.link:active {
+  scale: 0.97;
+}
+
+/* Each leaf of the card slides up onto the table as it scrolls in and settles with a small bounce.
+   Scroll-driven, so it follows the visitor's scroll and runs off the main thread; browsers without
+   view timelines simply show the leaf in place. The ceremonies leaf is left out: GSAP measures its
+   position for the pinned deck, and a transform there would shift every step. */
 @media (prefers-reduced-motion: no-preference) {
-  .diya-flame {
-    transform-box: fill-box;
-    transform-origin: 50% 100%;
-    animation: flicker 1.6s ease-in-out infinite alternate;
+  @supports (animation-timeline: view()) {
+    main > :not(:first-child, #ceremonies) {
+      animation: leaf-in linear both;
+      animation-timing-function: var(--ease-spring);
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
   }
-  /* Countdown garland. The hero sways its own strands with GSAP. */
-  .toran-sway .toran-strand {
-    animation: sway 3.4s ease-in-out infinite alternate;
-  }
-  .toran-sway .toran-strand:nth-child(even) {
-    animation-duration: 2.8s;
-    animation-delay: -1.2s;
-  }
-  .toran-sway .toran-strand:nth-child(3n) {
-    animation-delay: -2.1s;
-  }
-  .skyline-window {
-    animation: glow 4s ease-in-out infinite alternate;
-  }
-  .skyline-window:nth-child(3n) {
-    animation-delay: -1.3s;
-  }
-  .skyline-window:nth-child(4n + 1) {
-    animation-delay: -2.7s;
+}
+@keyframes leaf-in {
+  from {
+    transform: translateY(72px) scale(0.97);
   }
 }
 
-@keyframes flicker {
-  0% { transform: scale(1, 1) rotate(-2deg); opacity: 0.92; }
-  50% { transform: scale(0.94, 1.08) rotate(1.5deg); opacity: 1; }
-  100% { transform: scale(1.04, 0.95) rotate(-1deg); opacity: 0.88; }
+/* Sections scrolled well out of view rest their drawings (RevealObserver sets data-rest). */
+[data-rest] * {
+  animation-play-state: paused !important; /* the drawings set it back to running via their animation shorthand */
 }
 
-@keyframes glow {
-  from { opacity: 0.35; }
-  to { opacity: 0.95; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-@keyframes fadein {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Reveal once on entering the viewport (components/RevealObserver.tsx adds .is-in).
+   Hidden states only apply when scripting works (.js on <html>), so nothing stays hidden if a script fails.
+   Stagger the parts of a section with style="--i: 0|1|2…". */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity var(--t-reveal) var(--ease-out),
+      transform var(--t-reveal) var(--ease-out);
+    transition-delay: calc(var(--i, 0) * var(--stagger));
+  }
+  .js [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+  /* Pictures open like a card being unfolded. The clip sits on the image, not the wrapper:
+     IntersectionObserver counts clip-path, so a fully clipped wrapper would never be seen entering. */
+  .js [data-reveal="picture"] {
+    opacity: 1;
+    transform: none;
+  }
+  .js [data-reveal="picture"] img,
+  .js [data-reveal="picture"] video {
+    clip-path: inset(0 0 100% 0);
+    transform: scale(1.08);
+    transition:
+      clip-path 800ms var(--ease-out),
+      transform 1000ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * var(--stagger));
+  }
+  /* Drawings that live on a picture (birds, petals) arrive once the picture has opened under them. */
+  .js [data-reveal="picture"] > :not(img, video) {
+    opacity: 0;
+    transition: opacity 400ms var(--ease-out) calc(var(--i, 0) * var(--stagger) + 500ms);
+  }
+  .js [data-reveal="picture"].is-in > :not(img, video) {
+    opacity: 1;
+  }
+  .js [data-reveal="picture"].is-in img,
+  .js [data-reveal="picture"].is-in video {
+    clip-path: inset(0);
+  }
+  .js [data-reveal="picture"].is-in img,
+  .js [data-reveal="picture"].is-in video {
+    transform: none;
+  }
 }
-
-@keyframes sway {
-  from { transform: rotate(-2.5deg); }
-  to { transform: rotate(2.5deg); }
+/* Reduced motion keeps the fade, drops the travel. */
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal] {
+    opacity: 0;
+    transition: opacity 400ms ease;
+  }
+  .js [data-reveal].is-in {
+    opacity: 1;
+  }
 }

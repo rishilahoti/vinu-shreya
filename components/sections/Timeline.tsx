@@ -1,458 +1,315 @@
 "use client";
 
-import { useRef, type SVGProps } from "react";
-import {
-  FireIcon,
-  FlowerLotusIcon,
-  HandHeartIcon,
-  HorseIcon,
-  MapPinIcon,
-  MusicNotesIcon,
-  SunIcon,
-  type Icon,
-} from "@phosphor-icons/react";
-import { wedding, type EventIcon, type WeddingEvent } from "@/lib/content";
-import { gsap, ScrollTrigger, SplitText, useGSAP, MOTION_OK, REDUCED } from "@/lib/gsap";
-import { Diya, Mandala, PATTERNS, archPath } from "@/components/motifs";
+import { useRef, type CSSProperties, type ReactNode } from "react";
+import Image from "next/image";
+import { wedding } from "@/lib/content";
+import { gsap, ScrollTrigger, useGSAP, MOTION_OK } from "@/lib/gsap";
+import { DiyaRow } from "@/components/art/Diya";
+import Petals from "@/components/art/Petals";
+import Peacock from "@/components/art/Peacock";
+import Dhol from "@/components/art/Dhol";
+import Mare from "@/components/art/Mare";
+import Lotus from "@/components/art/Lotus";
+import Toran from "@/components/art/Toran";
+import SacredFire from "@/components/art/SacredFire";
+import s from "./Timeline.module.css";
 
-const HEADING = "Two days, one sacred thread";
-const HEADING_HI = "दो दिन, एक पवित्र धागा";
-const INTRO = "Every ceremony is a knot on the same red and gold thread. Follow the diya down, it knows the way.";
-const CLOSING_HI = "सात फेरे, सात वचन";
-const CLOSING = "Seven rounds, seven promises.";
-const DAY_COPY = {
-  1: { title: "Day one", hindi: "पहला दिन" },
-  2: { title: "Day two", hindi: "दूसरा दिन" },
-} as const;
+const { ceremonies, events } = wedding;
+const TONES = ["bg-paper", "bg-paper-2", "bg-[#e2d7c8]"];
+const DECK = `(min-width: 1024px) and (min-height: 680px) and ${MOTION_OK}`;
+// Phones and tablets: the same deck stood upright. Leaves rise from the bottom and stack at the top.
+const PILE = `(max-width: 1023.98px) and (min-height: 560px) and ${MOTION_OK}`;
+const PEEK = 28; // the strip of a stacked leaf left in view, printed with its name
+const DEPTH = 2; // stacked leaves left in view; deeper ones fade away so the open leaf keeps the screen
+const DAY_GAP = 16; // ground showing between Tuesday's leaves and Wednesday's
+const FIT = "xMinYMax meet"; // drawings stand on the leaf's foot line
+const fit = "h-full w-auto max-w-full";
+const i = (n: number) => ({ "--i": n }) as CSSProperties;
 
-const ICONS: Record<EventIcon, Icon> = {
-  sun: SunIcon,
-  hand: HandHeartIcon,
-  music: MusicNotesIcon,
-  horse: HorseIcon,
-  flower: FlowerLotusIcon,
-  fire: FireIcon,
+// Each leaf's printed drawing, standing at its foot.
+const ART: Record<string, ReactNode> = {
+  haldi: <DiyaRow count={3} preserveAspectRatio={FIT} className="h-auto w-full max-w-72" />,
+  mehendi: <Peacock preserveAspectRatio={FIT} className={fit} />,
+  sangeet: <Dhol preserveAspectRatio={FIT} className={fit} />,
+  baraat: (
+    <>
+      <Mare preserveAspectRatio={FIT} className={fit} />
+      <Dhol preserveAspectRatio={FIT} className="h-1/2 w-auto max-w-full" />
+    </>
+  ),
+  varmala: <Lotus preserveAspectRatio={FIT} className={fit} />,
+  pheras: <SacredFire preserveAspectRatio={FIT} className={fit} />,
 };
 
-const CARD_NICHE = archPath(2, 2, 52, 70, 4);
-const END_NICHE = archPath(4, 4, 88, 122, 5);
-const PETAL = "M0 -5.5C3.4 -8.5 3.6 -13.5 0 -18C-3.6 -13.5 -3.4 -8.5 0 -5.5Z";
-// The clip rises from the sill; its huge top radii clamp into the same arch as the card itself.
-const CLIP_HIDE = "inset(100% 0% 0% 0% round 9999px 9999px 16px 16px)";
-const CLIP_SHOW = "inset(0% 0% 0% 0% round 9999px 9999px 16px 16px)";
-// Mobile: thread in a left gutter. md+: thread down the centre, cards alternate.
-const COLS = "relative grid grid-cols-[3rem_1fr] gap-x-3 md:grid-cols-[1fr_7rem_1fr]";
-
-const DAYS = ([1, 2] as const).map((day) => ({
-  day,
-  events: wedding.events.map((e, i) => ({ ...e, right: i % 2 === 0 })).filter((e) => e.day === day),
-}));
-
-type Pt = { x: number; y: number };
-const r1 = (n: number) => Math.round(n * 10) / 10;
-const mix = (p: Pt, q: Pt, t: number): Pt => ({ x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t });
-
-function cubicLength(p0: Pt, p1: Pt, p2: Pt, p3: Pt) {
-  let len = 0;
-  let prev = p0;
-  for (let i = 1; i <= 16; i++) {
-    const t = i / 16;
-    const u = 1 - t;
-    const pt = {
-      x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x,
-      y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y,
-    };
-    len += Math.hypot(pt.x - prev.x, pt.y - prev.y);
-    prev = pt;
-  }
-  return len;
-}
-
-/**
- * Two mirrored strands (a mauli braid) through every point, crossing at each point and once between.
- * Each gap is cut into S-curves about `pitch` px tall. `marks[i]` = share of strand length at point i.
- */
-function braid(pts: Pt[], amp: number, pitch: number) {
-  let a = `M${r1(pts[0].x)} ${r1(pts[0].y)}`;
-  let b = a;
-  let len = 0;
-  const at = [0];
-  for (let i = 1; i < pts.length; i++) {
-    const k = Math.max(1, Math.round((pts[i].y - pts[i - 1].y) / pitch));
-    for (let j = 0; j < k; j++) {
-      const s = mix(pts[i - 1], pts[i], j / k);
-      const e = mix(pts[i - 1], pts[i], (j + 1) / k);
-      const h = (e.y - s.y) / 3;
-      const c1 = { x: s.x + amp, y: s.y + h };
-      const c2 = { x: e.x - amp, y: e.y - h };
-      const end = `${r1(e.x)} ${r1(e.y)}`;
-      a += ` C${r1(c1.x)} ${r1(c1.y)} ${r1(c2.x)} ${r1(c2.y)} ${end}`;
-      b += ` C${r1(s.x - amp)} ${r1(c1.y)} ${r1(e.x + amp)} ${r1(c2.y)} ${end}`;
-      len += cubicLength(s, c1, c2, e);
-    }
-    at.push(len);
-  }
-  return { a, b, marks: at.map((l) => (len ? l / len : 0)) };
-}
-
-function Rosette({ petals, ...props }: SVGProps<SVGSVGElement> & { petals: number }) {
-  return (
-    <svg viewBox="-20 -20 40 40" aria-hidden {...props}>
-      {petals > 8 && (
-        <circle r={19} fill="none" className="stroke-marigold" strokeWidth={1} strokeDasharray="0.1 3.2" strokeLinecap="round" />
-      )}
-      {Array.from({ length: petals }, (_, i) => (
-        <path key={i} d={PETAL} className={i % 2 ? "fill-rani" : "fill-marigold"} transform={`rotate(${(360 / petals) * i})`} />
-      ))}
-      <circle r={5.5} className="fill-night-deep stroke-marigold" strokeWidth={1.2} />
-      <circle r={2} className="fill-ivory" />
-    </svg>
-  );
-}
-
-/** A bead on the thread. Unlit it is a small ring; lit, a marigold rosette blooms over it. */
-function Knot({ big = false, className = "" }: { big?: boolean; className?: string }) {
-  return (
-    <span
-      data-anchor="knot"
-      aria-hidden
-      className={`relative z-10 grid place-items-center justify-self-center ${big ? "size-11" : "size-7"} ${className}`}
-    >
-      <span data-flare className="absolute inset-0 rounded-full border-2 border-marigold opacity-0" />
-      <span className="absolute inset-[24%] rounded-full border border-ivory/40 bg-night-deep" />
-      <Rosette data-lit petals={big ? 12 : 8} className="relative size-full" />
-    </span>
-  );
-}
-
-function DayMarker({ day, date }: { day: 1 | 2; date: string }) {
-  const copy = DAY_COPY[day];
-  return (
-    <div className={`${COLS} items-center`}>
-      <Knot big className="md:col-start-2 md:row-start-1" />
-      <h3
-        data-day-title
-        className="col-start-2 font-display text-6xl leading-[1.1] text-ivory md:col-start-1 md:row-start-1 md:text-right md:text-8xl"
-      >
-        {copy.title}
-      </h3>
-      <p data-day-sub className="col-start-2 flex flex-wrap items-baseline gap-x-3 md:col-start-3 md:row-start-1 md:flex-col md:gap-y-1">
-        <span lang="hi" className="font-display text-2xl text-rani md:text-3xl">
-          {copy.hindi}
-        </span>
-        <span className="text-[15px] font-semibold text-marigold md:text-base">{date}</span>
-      </p>
-    </div>
-  );
-}
-
-function EventRow({ event, right, first }: { event: WeddingEvent; right: boolean; first: boolean }) {
-  const Glyph = ICONS[event.icon];
-  return (
-    // Rows overlap on md (negative margin), so the row ignores taps and only the card takes them.
-    <div className={`${COLS} pointer-events-none ${first ? "mt-12 md:mt-14" : "mt-14 md:-mt-36"}`}>
-      <Knot className="mt-14 self-start md:col-start-2 md:row-start-1" />
-      <div
-        data-par
-        className={`pointer-events-auto col-start-2 w-full max-w-[22rem] md:row-start-1 ${
-          right ? "md:col-start-3 md:justify-self-start" : "md:col-start-1 md:justify-self-end"
-        }`}
-      >
-        <article
-          data-card
-          className="rounded-t-full rounded-b-2xl border border-marigold/25 bg-night-deep bg-linear-to-b from-plum/70 to-night-deep px-6 pb-8 pt-8 text-center"
-        >
-          <div>
-            <span className="relative mx-auto grid h-[74px] w-14 place-items-center">
-              <svg viewBox="0 0 56 74" className="absolute inset-0 size-full text-marigold/55" fill="none" stroke="currentColor" strokeWidth={1.25} aria-hidden>
-                <path d={CARD_NICHE} />
-              </svg>
-              <Glyph weight="duotone" aria-hidden className="relative mt-5 size-7 text-marigold" />
-            </span>
-            <h4 className="mt-4 text-balance font-display text-[1.75rem] leading-[1.1] text-ivory md:text-3xl">{event.name}</h4>
-            <p lang="hi" className="mt-1 font-display text-xl text-marigold/90">
-              {event.hindi}
-            </p>
-            <p className="mt-4 flex items-center justify-center gap-2 text-[15px] font-semibold text-marigold">
-              <span>{event.date}</span>
-              <span aria-hidden className="size-1 rounded-full bg-rani" />
-              <span>{event.time}</span>
-            </p>
-            <p className="mt-1 flex items-center justify-center gap-1.5 text-ivory/90">
-              <MapPinIcon weight="duotone" aria-hidden className="size-4 shrink-0 text-rani" />
-              {event.place}
-            </p>
-            <p className="mt-4 text-pretty text-[15px] leading-relaxed text-ivory/75">{event.note}</p>
-          </div>
-        </article>
-      </div>
-    </div>
-  );
-}
-
+/** The ceremonies leaf: six cards; a pinned deck whose earlier cards fold into spines on a wide screen and stack up on a phone. */
 export default function Timeline() {
   const root = useRef<HTMLElement>(null);
-  const track = useRef<HTMLDivElement>(null);
+  const wrap = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLOListElement>(null);
+  const go = useRef<((n: number, smooth?: boolean) => void) | null>(null);
 
   useGSAP(
     () => {
-      const rootEl = root.current;
-      const trackEl = track.current;
-      if (!rootEl || !trackEl) return;
-      const anchors = gsap.utils.toArray<HTMLElement>("[data-anchor]", trackEl);
-      const [halo, strandB, strandA] = gsap.utils.toArray<SVGPathElement>("[data-strand]", trackEl);
-      const guide = trackEl.querySelector<SVGPathElement>("[data-guide]");
-      const lamp = trackEl.querySelector<HTMLElement>("[data-lamp]");
-      if (!guide || !lamp || !strandA) return;
+      gsap.matchMedia().add({ deck: DECK, pile: PILE }, (ctx) => {
+        const pile = Boolean(ctx.conditions?.pile);
+        const sec = root.current;
+        const band = list.current;
+        if (!sec || !band || !wrap.current) return;
+        const items = Array.from(band.children) as HTMLElement[];
+        const prints = items.map((el) => el.querySelectorAll<HTMLElement>(":scope > article > *"));
+        const last = items.length - 1;
+        let active = -1;
 
-      // The thread is rebuilt from where the beads actually sit, so fonts or a new width can't misalign it.
-      let marks: number[] = [];
-      const layout = () => {
-        const box = trackEl.getBoundingClientRect();
-        const pts = anchors.map((el) => {
-          const r = el.getBoundingClientRect();
-          return { x: r.left - box.left + r.width / 2, y: r.top - box.top + r.height / 2 };
-        });
-        const wide = window.matchMedia("(min-width: 48rem)").matches;
-        const { a, b, marks: m } = braid(pts, wide ? 150 : 44, wide ? 220 : 150);
-        halo.setAttribute("d", a);
-        strandA.setAttribute("d", a);
-        strandB.setAttribute("d", b);
-        guide.setAttribute("d", `M${pts.map((p) => `${r1(p.x)} ${r1(p.y)}`).join(" L")}`);
-        marks = m;
-      };
-
-      const mm = gsap.matchMedia();
-
-      // Reduced motion: thread fully drawn, every bead lit, cards open, diya resting in its niche (its DOM home).
-      mm.add(REDUCED, () => {
-        const ro = new ResizeObserver(layout);
-        ro.observe(trackEl);
-        return () => ro.disconnect();
-      });
-
-      mm.add(MOTION_OK, () => {
-        layout();
-        gsap.set(lamp, { willChange: "transform" });
-
-        const heading = rootEl.querySelector("[data-heading]");
-        const intro = rootEl.querySelectorAll("[data-intro]");
-        if (heading) {
-          SplitText.create(heading, {
-            type: "lines,words",
-            mask: "lines",
-            linesClass: "tl-line",
-            autoSplit: true,
-            onSplit: (self) =>
-              gsap
-                .timeline({ scrollTrigger: { trigger: heading, start: "top 85%" } })
-                .from(self.words, { yPercent: 110, duration: 1.1, ease: "expo.out", stagger: 0.06 })
-                .from(intro, { y: 18, autoAlpha: 0, duration: 1, ease: "power3.out", stagger: 0.1 }, 0.35),
+        const show = (progress: number) => {
+          const a = Math.round(progress * last);
+          if (a === active) return;
+          active = a;
+          sec.dataset.day = String(events[a].day);
+          items.forEach((el, n) => {
+            el.dataset.state = n < a ? "spine" : n === a ? "open" : n === a + 1 ? "next" : "later";
+            el.querySelector("button")!.hidden = n >= a;
           });
-        }
-
-        const mandala = rootEl.querySelector("[data-mandala]");
-        if (mandala) {
-          gsap.set(mandala, { willChange: "transform" });
-          gsap.fromTo(
-            mandala,
-            { rotate: -15, yPercent: -6 },
-            { rotate: 45, yPercent: 14, ease: "none", scrollTrigger: { trigger: rootEl, start: "top bottom", end: "bottom top", scrub: true } },
-          );
-        }
-
-        type Bead = {
-          at: number;
-          light: gsap.core.Animation;
-          flare?: gsap.core.Animation;
-          reveal?: gsap.core.Animation;
-          lit: boolean;
-          shown: boolean;
         };
-        const beads: Bead[] = [];
+        // Leaves waiting off stage are already printed; reveal-on-scroll would only see them arrive late.
+        items.forEach((el) => el.querySelectorAll("[data-reveal]").forEach((r) => r.classList.add("is-in")));
+        sec.classList.add(pile ? s.pile : s.deck);
 
-        anchors.forEach((el, at) => {
-          const kind = el.dataset.anchor;
-          if (kind === "end") {
-            const glow = trackEl.querySelector("[data-niche-lit]");
-            beads.push({
-              at,
-              lit: false,
-              shown: true,
-              light: gsap.fromTo(glow, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.9, ease: "power2.inOut", paused: true, immediateRender: true }),
-            });
-            return;
-          }
-          if (kind !== "knot") return;
+        let layout: () => void;
+        let redraw = () => {};
+        // State follows the cards as drawn (the scrub lags the scroll), so a spine is named only once it has folded.
+        const tl = gsap.timeline({ defaults: { ease: "none" }, onUpdate: () => show(tl.progress()) });
 
-          const bead: Bead = {
-            at,
-            lit: false,
-            shown: false,
-            light: gsap.fromTo(
-              el.querySelector("[data-lit]"),
-              { autoAlpha: 0, scale: 0.3, rotate: -90 },
-              { autoAlpha: 1, scale: 1, rotate: 0, duration: 0.8, ease: "expo.out", paused: true, immediateRender: true },
-            ),
-            flare: gsap.fromTo(
-              el.querySelector("[data-flare]"),
-              { scale: 0.6, autoAlpha: 0.9 },
-              { scale: 2.8, autoAlpha: 0, duration: 1.1, ease: "power3.out", paused: true, immediateRender: false },
-            ),
+        if (!pile) {
+          let S = 0;
+          let C = 0;
+          // Spines take a fixed width; the open card gets the rest, so the last step fills the band exactly.
+          layout = () => {
+            S = Math.round(gsap.utils.clamp(72, 120, innerWidth * 0.084));
+            C = Math.min(880, band.clientWidth - last * S - DAY_GAP);
+            band.style.setProperty("--spine", `${S}px`);
+            band.style.setProperty("--card", `${C}px`);
           };
-          beads.push(bead);
-
-          const row = el.parentElement;
-          const card = row?.querySelector("[data-card]");
-          const title = row?.querySelector("[data-day-title]");
-          if (card) {
-            bead.reveal = gsap
-              .timeline({ paused: true })
-              .fromTo(card, { clipPath: CLIP_HIDE }, { clipPath: CLIP_SHOW, duration: 1.3, ease: "expo.out", immediateRender: true })
-              .from(card.firstElementChild, { y: 40, duration: 1.3, ease: "expo.out" }, 0);
-          } else if (title) {
-            SplitText.create(title, {
-              type: "chars",
-              autoSplit: true,
-              onSplit: (self) => {
-                const anim = gsap
-                  .timeline({ paused: !bead.shown })
-                  .from(self.chars, { yPercent: 70, autoAlpha: 0, duration: 0.9, ease: "expo.out", stagger: 0.035 })
-                  .from(row?.querySelector("[data-day-sub]") ?? [], { y: 12, autoAlpha: 0, duration: 0.8, ease: "power3.out" }, 0.2);
-                bead.reveal = anim;
-                return anim;
-              },
+          const off = (n: number) => (events[n].day === 2 ? DAY_GAP : 0);
+          layout();
+          // Card n travels from its place in the row to its spine slot, arriving at step n.
+          items.forEach((el, n) => {
+            if (n) tl.fromTo(el, { x: () => n * C + off(n) }, { x: () => n * S + off(n), duration: n }, 0);
+            // A leaf's print fades in step with the scroll, before the next leaf's edge reaches its text
+            // (autoAlpha also hides it, so covered text is never left readable underneath).
+            if (n < last) tl.to(prints[n], { autoAlpha: 0, duration: 0.25 }, n + 0.3);
+          });
+        } else {
+          // Upright: leaf k rises from below the band during step k-1→k, then recedes up the pile one peek per step.
+          const top = PEEK * DEPTH;
+          let H = 0;
+          layout = () => {
+            H = band.clientHeight;
+            band.style.setProperty("--card", `${H - top}px`);
+            // On a short or zoomed screen a leaf whose words do not fit gives up its painting, then its drawing, never its words.
+            items.forEach((el) => {
+              el.removeAttribute("data-tight");
+              const a = el.querySelector("article")!;
+              const over = () => a.scrollHeight > a.clientHeight + 1;
+              if (over()) el.setAttribute("data-tight", "");
+              if (over()) el.setAttribute("data-tight", "bare");
             });
-          }
-        });
+          };
+          const at = { p: 0 };
+          const clamp = gsap.utils.clamp(0, 1);
+          // The rising leaf eases in and overshoots its rest by about 1% before settling: the bounce lands on the card that arrives.
+          const land = gsap.parseEase("back.out(0.6)");
+          // Setters, not gsap.set: a set made during the scrub would be recorded in the matchMedia context on every frame.
+          const setLeaf = items.map((el) => gsap.quickSetter(el, "css") as (v: gsap.TweenVars) => void);
+          const setPrint = prints.map((p) => gsap.quickSetter(p, "css") as (v: gsap.TweenVars) => void);
+          redraw = () =>
+            items.forEach((_, k) => {
+              const p = at.p;
+              const d = Math.min(Math.max(p - k, 0), DEPTH);
+              const y = p <= k - 1 ? H : p < k ? H - (H - top) * land(p - k + 1) : top - d * PEEK;
+              // Opacity, not autoAlpha: covered leaves stay in the accessibility tree, and focusing one brings it forward.
+              setLeaf[k]({ y, scale: 1 - d * 0.04, opacity: clamp(DEPTH + 1 - (p - k)) });
+              // Its words fade only as the next leaf closes over them, so a leaf at rest is never washed out.
+              if (k < last) setPrint[k]({ opacity: 1 - clamp((p - k - 0.8) / 0.2) });
+            });
+          gsap.set(items, { transformOrigin: "50% 0%" });
+          layout();
+          tl.to(at, { p: last, duration: last, onUpdate: redraw });
+          redraw();
+        }
 
-        // One scrubbed timeline: the braid draws and the diya rides strand A on the same progress,
-        // and beads light when that progress passes their share of the strand length.
-        const tl = gsap
-          .timeline({ paused: true, defaults: { ease: "none", duration: 1 } })
-          .fromTo([halo, strandB, strandA], { drawSVG: "0% 0%" }, { drawSVG: "0% 100%" }, 0)
-          .to(lamp, { motionPath: { path: strandA, align: strandA, alignOrigin: [0.5, 0.5] }, immediateRender: true }, 0);
-
-        const sync = () => {
-          const p = tl.progress();
-          for (const bead of beads) {
-            const on = p >= (marks[bead.at] ?? 1) - 0.003;
-            if (on === bead.lit) continue;
-            bead.lit = on;
-            if (!on) {
-              bead.light.reverse();
-              continue;
-            }
-            bead.light.play();
-            bead.flare?.restart();
-            if (!bead.shown) {
-              bead.shown = true;
-              bead.reveal?.play();
-            }
-          }
-        };
-        tl.eventCallback("onUpdate", sync);
-
-        ScrollTrigger.create({
-          trigger: trackEl,
+        const st = ScrollTrigger.create({
+          trigger: wrap.current,
+          start: "top top",
+          end: "bottom bottom",
           animation: tl,
-          start: "top 70%",
-          end: "bottom 70%",
-          scrub: 0.6,
+          // Cards glide after the scroll instead of sticking to it, and each settles into place with a small bounce
+          // (on the pile the bounce is in the rise itself, so the snap just eases home).
+          scrub: pile ? 0.6 : 0.8,
           invalidateOnRefresh: true,
-          onRefresh: sync,
+          // No inertia: its velocity comes from the lagging scrub and would fling the snap past the card asked for.
+          snap: { snapTo: 1 / last, inertia: false, duration: { min: 0.35, max: 0.8 }, delay: 0.08, ease: pile ? "power3.out" : "back.out(1.4)" },
+          onRefresh: (self) => {
+            // A fast flick's native momentum stops at each leaf instead of blurring past two (stops are display:none off the pile).
+            wrap.current?.querySelectorAll<HTMLElement>(`.${s.stop}`).forEach((el, n) => {
+              el.style.top = `${((self.end - self.start) * n) / last}px`;
+            });
+            redraw();
+            show(self.progress);
+          },
         });
-
-        // Cards drift a little against the thread.
-        gsap.utils.toArray<HTMLElement>("[data-par]", trackEl).forEach((el) => {
-          gsap.fromTo(el, { y: 28 }, { y: -28, ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true } });
-        });
-
-        // Runs before every refresh; invalidateOnRefresh then re-reads the new path for the draw and the diya.
         ScrollTrigger.addEventListener("refreshInit", layout);
-        return () => ScrollTrigger.removeEventListener("refreshInit", layout);
+        go.current = (n, smooth = true) =>
+          window.scrollTo({ top: st.start + ((st.end - st.start) * n) / last, behavior: smooth ? "smooth" : "instant" });
+        show(st.progress);
+        ScrollTrigger.refresh(); // the pinned runway moved every trigger below it
+
+        return () => {
+          ScrollTrigger.removeEventListener("refreshInit", layout);
+          go.current = null;
+          sec.classList.remove(s.deck, s.pile);
+          delete sec.dataset.day;
+          band.style.removeProperty("--spine");
+          band.style.removeProperty("--card");
+          // gsap.set calls made while scrolling are not recorded by the matchMedia context, so clear them here.
+          if (pile) {
+            gsap.set(items, { clearProps: "transform,transformOrigin,opacity,visibility" });
+            prints.forEach((p) => gsap.set(p, { clearProps: "opacity,visibility" }));
+          }
+          items.forEach((el) => {
+            delete el.dataset.state;
+            el.removeAttribute("data-tight");
+            el.querySelector("button")!.hidden = true;
+          });
+          // On a phone this is the page's only ScrollTrigger: killing it makes ScrollTrigger forget the scroll, and the
+          // refresh after a rotate or reduced-motion switch scrolls to 0 to measure. Put the guest back where they were.
+          const y = scrollY;
+          const back = () => {
+            ScrollTrigger.removeEventListener("refresh", back);
+            window.scrollTo(0, y);
+          };
+          ScrollTrigger.addEventListener("refresh", back);
+          // Only the refresh that follows this switch; a later one (the RSVP growing) must not jump the guest back.
+          window.setTimeout(() => ScrollTrigger.removeEventListener("refresh", back), 1000);
+        };
       });
     },
     { scope: root },
   );
 
   return (
-    <section
-      ref={root}
-      id="timeline"
-      aria-labelledby="timeline-title"
-      className="relative isolate min-h-[100dvh] overflow-x-clip bg-night py-24 md:py-36"
-    >
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-linear-to-b from-night via-plum/40 to-night-deep" />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-30 [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)]"
-        style={{ backgroundImage: PATTERNS.leheriya }}
-      />
-      <Mandala
-        data-mandala
-        className="pointer-events-none absolute left-1/2 top-0 w-[40rem] -translate-x-1/2 -translate-y-1/4 text-marigold/10 md:w-[56rem]"
-      />
-
-      <header className="relative mx-auto max-w-2xl px-5 text-center">
-        <h2
-          id="timeline-title"
-          data-heading
-          className="text-balance font-display text-[2.75rem] leading-[1.05] text-ivory md:text-7xl [&_.tl-line-mask]:-mb-[0.15em] [&_.tl-line-mask]:pb-[0.15em]"
-        >
-          {HEADING}
-        </h2>
-        <p data-intro lang="hi" className="mt-4 font-display text-2xl text-rani md:text-3xl">
-          {HEADING_HI}
-        </p>
-        <p data-intro className="mx-auto mt-5 max-w-md text-pretty text-[17px] leading-relaxed text-ivory/80 md:text-lg">
-          {INTRO}
-        </p>
-      </header>
-
-      <div ref={track} className="relative mx-auto mt-14 max-w-5xl px-5 md:mt-20 md:px-8">
-        <svg aria-hidden className="pointer-events-none absolute inset-0 size-full overflow-visible" fill="none" strokeLinecap="round">
-          <path data-guide className="stroke-ivory/20" strokeWidth={2} strokeDasharray="0 10" />
-          <path data-strand className="stroke-marigold/20" strokeWidth={7} />
-          <path data-strand className="stroke-rani" strokeWidth={1.75} />
-          <path data-strand className="stroke-marigold" strokeWidth={2.25} />
-        </svg>
-
-        <span data-anchor="start" aria-hidden className="relative mx-auto block size-2.5 rounded-full bg-marigold" />
-
-        {DAYS.map(({ day, events }) => (
-          <div key={day} className={day === 1 ? "mt-20" : "mt-24 md:mt-32"}>
-            <DayMarker day={day} date={events[0]?.date ?? ""} />
-            {events.map((e, j) => (
-              <EventRow key={e.id} event={e} right={e.right} first={j === 0} />
-            ))}
-          </div>
+    <section ref={root} id="ceremonies" aria-labelledby="ceremonies-title" className="relative overflow-x-clip pt-(--section)">
+      {/* The heading scrolls on; only the deck pins, so no title is held on screen for three screens. */}
+      <h2 id="ceremonies-title" className="t-head page-x">
+        {ceremonies.heading.map((line, n) => (
+          <span key={line} data-reveal className="block" style={i(n)}>
+            {line}
+          </span>
         ))}
+      </h2>
+      <div ref={wrap} className={s.wrap}>
+        {/* Snap stops for touch momentum, one per leaf (pile only; placed from ScrollTrigger's measured steps). */}
+        {events.map((ev) => (
+          <i key={ev.id} aria-hidden className={s.stop} />
+        ))}
+        <div className={`${s.stage} page-x`}>
+          <div aria-hidden className={s.dusk} />
+          <ol ref={list} className={`${s.band} mt-10 flex flex-col gap-3 lg:mt-0`}>
+            {events.map((ev, n) => (
+              <li
+                key={ev.id}
+                className={`${s.item} ${n && ev.day !== events[n - 1].day ? "mt-9" : ""}`}
+                // Tabbing into a card that sits under the deck brings it forward.
+                onFocus={(e) => e.target.tagName !== "BUTTON" && go.current?.(n, false)}
+              >
+                <button
+                  type="button"
+                  hidden
+                  aria-label={ev.name}
+                  className={s.spine}
+                  onClick={(e) => {
+                    go.current?.(n);
+                    (e.currentTarget.nextElementSibling as HTMLElement).focus({ preventScroll: true });
+                  }}
+                >
+                  {/* Printed up the spine like a book's title, so a folded leaf still names itself in full. */}
+                  <span aria-hidden className={`${s.spineLabel} t-body font-bold`}>
+                    {ev.name}
+                  </span>
+                </button>
+                <article
+                  aria-labelledby={`${ev.id}-title`}
+                  tabIndex={-1}
+                  data-reveal
+                  className={`${TONES[n % 3]} grid p-5 sm:p-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)_auto] lg:gap-x-8 lg:gap-y-6`}
+                >
+                  <div className={`${s.picCell} relative min-h-0 lg:col-start-2 lg:row-start-1`}>
+                    <div data-reveal="picture" className={`${s.pic} relative aspect-[4/3] overflow-hidden`}>
+                      <Image
+                        src={ev.painting.src}
+                        alt={ev.painting.alt}
+                        fill
+                        // Eager, low priority: leaves waiting off stage are clipped, so lazy loading would only fetch a painting as it rises.
+                        loading="eager"
+                        fetchPriority="low"
+                        sizes="(min-width: 1024px) 40vw, 100vw"
+                        className="object-cover"
+                        style={{ objectPosition: ev.painting.focal }}
+                      />
+                      {ev.id === "haldi" && <Petals count={12} colors={["#E8B83A", "#E39B2D"]} seed={202} />}
+                    </div>
+                    {/* The varmala painting is the doorway, with its toran over it. */}
+                    {ev.id === "varmala" && <Toran swags={2} className="absolute inset-x-0 -top-3 w-full" />}
+                  </div>
 
-        <div className={`${COLS} mt-14`}>
-          <span data-anchor="pass" aria-hidden className="size-1 justify-self-center md:col-start-2" />
-        </div>
+                  <div className={`${s.textCell} mt-6 min-h-0 lg:col-start-1 lg:row-start-1 lg:mt-0`}>
+                    <h3 id={`${ev.id}-title`} className="t-lead font-bold">
+                      {ev.lines.map((line) => (
+                        <span key={line} className="block">
+                          {line}
+                        </span>
+                      ))}
+                    </h3>
+                    <p lang="hi" className="t-lead mt-1">
+                      {ev.hindi}
+                    </p>
+                    <p className="t-body mt-3 font-medium">{ev.place}</p>
+                    <p className="t-body mt-4">{ev.about}</p>
+                    <p className="t-body mt-3">
+                      <span className="font-bold">{ceremonies.wearLabel}</span> {ev.wear}
+                    </p>
+                  </div>
 
-        <div className="relative z-20 mt-16 flex flex-col items-center text-center">
-          <div className="relative grid h-32 w-24 items-end justify-items-center pb-3">
-            <svg viewBox="0 0 96 128" className="absolute inset-0 size-full" fill="none" strokeWidth={1.5} aria-hidden>
-              <path d={END_NICHE} className="stroke-ivory/25" />
-              <path data-niche-lit d={END_NICHE} className="fill-marigold/10 stroke-marigold" />
-              <path d="M0 127H96" className="stroke-marigold/40" />
-            </svg>
-            <div data-anchor="end" className="relative grid size-14 place-items-center">
-              <div data-lamp aria-hidden className="relative grid size-14 place-items-center">
-                <span className="absolute -inset-10 rounded-full bg-[radial-gradient(circle,rgba(242,168,59,0.38)_0%,rgba(242,168,59,0.12)_38%,transparent_68%)] motion-safe:animate-pulse" />
-                <Diya className="relative w-10" />
-              </div>
-            </div>
-          </div>
-          <p lang="hi" className="mt-6 font-display text-3xl text-rani">
-            {CLOSING_HI}
-          </p>
-          <p className="mt-2 text-ivory/80">{CLOSING}</p>
+                  <div className={`${s.dateRow} mt-6 flex items-baseline justify-between gap-4 lg:col-start-1 lg:row-start-2 lg:mt-0 lg:self-end`}>
+                    <p className="t-body">
+                      <span className="font-bold">{ev.date}</span> {ev.time}
+                    </p>
+                    <a
+                      href="#rsvp"
+                      data-tick={ev.id}
+                      aria-describedby={`${ev.id}-title`}
+                      className={`link t-body font-medium ${s.press}`}
+                      onClick={() => window.dispatchEvent(new CustomEvent("rsvp:tick", { detail: ev.id }))}
+                    >
+                      {ceremonies.link}
+                    </a>
+                  </div>
+
+                  <div className={`${s.artCell} mt-4 flex h-32 items-end justify-end gap-2 lg:col-start-2 lg:row-start-2 lg:mt-0 lg:h-[clamp(7rem,16svh,9.5rem)] lg:justify-start`}>
+                    {ART[ev.id]}
+                  </div>
+                </article>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
+      {/* Outside the pinned stage, so on a phone every pixel of the stage goes to the leaves. */}
+      <p data-reveal className="t-body page-x mt-12">
+        {ceremonies.after}{" "}
+        <a href="#rsvp" className={`link ${s.press}`}>
+          {ceremonies.afterLink}
+        </a>
+      </p>
     </section>
   );
 }

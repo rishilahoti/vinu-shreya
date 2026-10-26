@@ -1,0 +1,21 @@
+/* Press feedback for the footer's links; the hover underline comes from .link (pointer-fine only). */
+.address a {
+  display: inline-block;
+  transform-origin: 0 50%;
+  transition:
+    transform var(--t-press) var(--ease-out),
+    text-decoration-color var(--t-hover) ease;
+}
+.address a:active {
+  transform: scale(0.97);
+}
+
+/* Credit titles wrap mid-line, where a transform cannot apply, so they dim instead. */
+.credits a {
+  transition:
+    opacity var(--t-press) var(--ease-out),
+    text-decoration-color var(--t-hover) ease;
+}
+.credits a:active {
+  opacity: 0.6;
+}

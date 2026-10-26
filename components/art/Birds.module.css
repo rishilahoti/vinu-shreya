@@ -1,0 +1,74 @@
+/* Wings hinge at the shoulder: the bottom edge of each wing shape. */
+.wing {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The flock crosses its box at a constant speed and fades at both ends, so the wrap never shows. */
+  .drift {
+    animation: drift 16s linear infinite;
+    animation-delay: -6s;
+  }
+  .rise {
+    animation: rise 5.2s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .bob {
+    animation: bob 3s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  /* Bounding flight: three beats, then a glide. Per-bird timing is set inline. */
+  .wing {
+    animation: flap 2.6s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: translateX(-110px);
+    opacity: 0;
+  }
+  14%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(110px);
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(6px);
+  }
+  to {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes bob {
+  from {
+    transform: translateY(-2.5px);
+  }
+  to {
+    transform: translateY(2.5px);
+  }
+}
+
+@keyframes flap {
+  0%,
+  58%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  8%,
+  24%,
+  40% {
+    transform: scaleY(1);
+  }
+  16%,
+  32%,
+  48% {
+    transform: scaleY(-0.7);
+  }
+}

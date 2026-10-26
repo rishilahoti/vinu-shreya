@@ -1,0 +1,255 @@
+/* The pinned deck exists only while Timeline.tsx's matchMedia puts .deck on the section (wide, tall
+   enough, motion allowed). Phones, tablets, reduced motion and no script all get the plain stack. */
+.deck .wrap {
+  height: 300svh;
+}
+.deck .stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: clamp(24px, 5svh, 64px) 32px;
+}
+.deck .band {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 640px;
+}
+.deck .item {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: var(--card);
+  margin: 0;
+}
+.deck .item > article {
+  height: 100%;
+}
+.deck .pic {
+  aspect-ratio: auto;
+  height: 100%;
+}
+
+/* The pile: the deck stood upright for phones and tablets (Timeline.tsx's matchMedia adds .pile).
+   Leaves rise from below the band and stack at its top, each leaving a 28px strip with its name. */
+.pile .wrap {
+  height: calc(100svh + 5 * 65svh);
+}
+.pile .stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  padding-block: 12px 16px;
+}
+.pile .band {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  margin: 0;
+  overflow: clip; /* leaves waiting below the band stay out of sight */
+}
+.pile .item {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: var(--card);
+  margin: 0;
+  will-change: transform; /* leaves move every frame of the scrub; keep them on their own layers */
+}
+/* Touch momentum stops at each leaf (Timeline.tsx places each stop at its ScrollTrigger step). Gated to coarse
+   pointers, because root snapping would trap a mouse wheel's small steps. */
+.stop {
+  display: none;
+}
+.pile .wrap {
+  position: relative;
+}
+.pile .stop {
+  display: block;
+  position: absolute;
+  width: 1px;
+  height: 1px; /* taste-skill-ignore: an unpainted scroll-snap anchor, not a rule */
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+@media (pointer: coarse) {
+  :root:has(.pile) {
+    scroll-snap-type: y proximity;
+  }
+}
+/* Upright, the leaf reads top to bottom: painting, its drawing standing on the painting's foot, words, date. */
+.pile .item > article {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pile .picCell {
+  order: 0;
+  flex: 1 1 0;
+  min-height: 88px;
+}
+.pile .pic {
+  aspect-ratio: auto;
+  height: 100%;
+}
+.pile .artCell {
+  order: 1;
+  position: relative;
+  z-index: 1;
+  height: 72px;
+  margin-top: -52px;
+  pointer-events: none;
+}
+.pile .textCell {
+  order: 2;
+  flex: none;
+  margin-top: 4px;
+}
+.pile .dateRow {
+  order: 3;
+  flex: none;
+  margin-top: 12px;
+}
+.pile [data-tight] .picCell {
+  display: none;
+}
+.pile [data-tight] .artCell {
+  height: 56px;
+  margin-top: 0;
+}
+/* Still too tall (zoomed text, a very short screen): the drawing goes too, never the words. */
+.pile [data-tight="bare"] .artCell {
+  display: none;
+}
+/* The name strip: a stacked leaf's top edge is the button that brings it back. */
+.pile .spine {
+  inset-block: 0 auto;
+  inset-inline: 0;
+  width: auto;
+  height: 28px;
+}
+.pile .spineLabel {
+  inset: 0 auto auto 20px;
+  writing-mode: horizontal-tb;
+  transform: none;
+  font-size: var(--step-small);
+  line-height: 28px;
+  text-align: left;
+}
+
+/* The plain stack (reduced motion, short landscape screens, no script): each leaf is dealt in from
+   alternate sides as it scrolls into view. Never on the deck or the pile, where GSAP owns the transform. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    :not(.deck, .pile) > .wrap .item {
+      animation: deal linear both;
+      animation-timing-function: var(--ease-spring);
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+    :not(.deck, .pile) > .wrap .item:nth-child(even) {
+      --from: 12px;
+      --tilt: 2deg;
+    }
+  }
+}
+/* Mostly a rise with a tilt: a wide sideways drift would push the text against the phone's edge. */
+@keyframes deal {
+  from {
+    transform: translate(var(--from, -12px), 48px) rotate(var(--tilt, -2deg));
+  }
+}
+
+/* A folded leaf: its visible edge is the button that brings it back. */
+.spine {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--spine);
+  cursor: pointer;
+}
+.spine:focus-visible {
+  outline-offset: -6px;
+}
+.item {
+  transition: translate 200ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .item:has(.spine:hover) {
+    translate: 0 -8px !important; /* GSAP writes an inline translate on these leaves */
+  }
+  .item:has(.spine:active) {
+    translate: 0 -3px !important;
+  }
+}
+/* On touch there is no hover lift, so a press pushes the leaf down instead of up. */
+@media (hover: none) {
+  .item:has(.spine:active) {
+    translate: 0 3px !important;
+  }
+}
+
+/* A folded leaf prints only its name up the spine; the rest of the leaf is faded by the scrubbed timeline in Timeline.tsx. */
+.spineLabel {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  writing-mode: vertical-rl;
+  transform: translateX(-50%) rotate(180deg);
+  white-space: nowrap;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out);
+}
+.item[data-state="spine"] .spineLabel {
+  opacity: 1;
+}
+/* The strip's button was display:none a frame earlier; start its label from transparent so it fades in. */
+@starting-style {
+  .item[data-state="spine"] .spineLabel {
+    opacity: 0;
+  }
+}
+/* Drawings on covered or off-stage leaves rest. */
+.item[data-state="spine"] *,
+.item[data-state="later"] * {
+  animation-play-state: paused;
+}
+
+/* Wednesday: the ground behind the deck darkens one tone. */
+.dusk {
+  display: none;
+}
+.deck .dusk,
+.pile .dusk {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-ground-2);
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+.deck[data-day="2"] .dusk,
+.pile[data-day="2"] .dusk {
+  opacity: 1;
+}
+
+a.press {
+  display: inline-block;
+  transition:
+    transform var(--t-press) var(--ease-out),
+    text-decoration-color var(--t-hover) ease;
+}
+a.press:active {
+  transform: scale(0.97);
+}

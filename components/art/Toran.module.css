@@ -1,0 +1,34 @@
+/* Strands hang from their knot; swags breathe from the band. Both pivot at the top centre. */
+.strand,
+.swag {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Durations and phases are set inline per strand and per swag, so none tick together. */
+  .strand {
+    animation: sway 3.8s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .swag {
+    animation: breathe 5.6s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+}
+
+@keyframes sway {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes breathe {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(1.03);
+  }
+}

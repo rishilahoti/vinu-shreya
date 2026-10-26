@@ -1,0 +1,35 @@
+/* The bell swings from the top of its chain; the clapper from its pin inside the dome. */
+.swing,
+.clapper {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Durations and phase are set inline from the chain length. */
+  .swing {
+    animation: swing 3.3s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  /* Same period, half a second behind and against the bell: it lags, then catches up. */
+  .clapper {
+    animation: lag 3.3s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+}
+
+@keyframes swing {
+  from {
+    transform: rotate(-8deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes lag {
+  from {
+    transform: rotate(5deg);
+  }
+  to {
+    transform: rotate(-5deg);
+  }
+}
