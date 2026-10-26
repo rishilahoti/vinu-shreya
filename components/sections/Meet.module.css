@@ -1,0 +1,24 @@
+/* A tipped-in plate keeps its tilt at rest (also without script and under reduced motion). */
+.plate {
+  transform: rotate(var(--r));
+}
+
+/* Plates drop onto the desk: from a little above and nearer, tilted further, settling on their own tilt.
+   Overrides the global rise of [data-reveal], which would wipe the tilt with `transform: none`. */
+@media (prefers-reduced-motion: no-preference) {
+  :global(.js) .plate[data-reveal] {
+    transform: translateY(-20px) rotate(calc(var(--r) * 2.2)) scale(1.03);
+    transition:
+      opacity 600ms var(--ease-out),
+      transform 600ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 80ms);
+  }
+  :global(.js) .plate[data-reveal]:global(.is-in) {
+    transform: rotate(var(--r));
+  }
+}
+
+/* Letter leading; .t-body is unlayered, so a Tailwind leading utility would lose to it. */
+.letter p {
+  line-height: 1.55;
+}

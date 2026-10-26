@@ -1,0 +1,51 @@
+/* Three loops at unrelated periods (sway, tilt, tail) so the kite never repeats a pose in step. */
+@media (prefers-reduced-motion: no-preference) {
+  /* String and kite swing together about the string's far end (bottom corner of the group). */
+  .kiteSway {
+    transform-box: fill-box;
+    transform-origin: 0% 100%;
+    animation: kiteSwayKf var(--sway, 6.8s) cubic-bezier(0.37, 0, 0.63, 1) var(--d, 0s) infinite alternate;
+  }
+  .kiteFromRight {
+    transform-origin: 100% 100%;
+  }
+  /* Tilt about the bridle knot, so the string stays tied on. (0, 2) in a box 60 × 75 from (-30, -30). */
+  .kiteTilt {
+    transform-box: fill-box;
+    transform-origin: 50% 42.67%;
+    animation: kiteTiltKf var(--tilt, 3.9s) cubic-bezier(0.37, 0, 0.63, 1) var(--d, 0s) infinite alternate;
+  }
+  /* Tail flutters from where it is glued on. */
+  .kiteTail {
+    transform-box: fill-box;
+    transform-origin: 50% 0%;
+    animation: kiteTailKf 2.4s cubic-bezier(0.37, 0, 0.63, 1) var(--d, 0s) infinite alternate;
+  }
+}
+
+@keyframes kiteSwayKf {
+  from {
+    transform: rotate(-1.6deg);
+  }
+  to {
+    transform: rotate(1.6deg);
+  }
+}
+
+@keyframes kiteTiltKf {
+  from {
+    transform: rotate(-5deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes kiteTailKf {
+  from {
+    transform: rotate(-10deg);
+  }
+  to {
+    transform: rotate(8deg);
+  }
+}

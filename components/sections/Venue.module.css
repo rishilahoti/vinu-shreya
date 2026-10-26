@@ -1,0 +1,83 @@
+/* The questions are native <details>: keyboard and screen readers get the browser's own behaviour.
+   Motion only dresses it: the answer fades (and, with motion allowed, drops in), the chevron turns. */
+.q summary {
+  display: flex;
+  min-height: 2.75rem; /* 44px touch target */
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+.q summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Two 2px strokes, turned up when open. */
+.chev {
+  flex: none;
+  width: 1rem;
+  height: 0.625rem;
+}
+.q[open] .chev {
+  transform: rotate(180deg);
+}
+
+/* Exit is quicker than entry. */
+.a {
+  transition: opacity 160ms ease;
+}
+.q[open] .a {
+  transition-duration: 240ms;
+}
+.q:not([open]) .a {
+  opacity: 0;
+}
+@starting-style {
+  .q[open] .a {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .q summary {
+    transform-origin: center;
+    transition: transform var(--t-press) var(--ease-out);
+  }
+  .q summary:active {
+    transform: scale(0.98);
+  }
+  .chev {
+    transition: transform 200ms var(--ease-out);
+  }
+  .a {
+    transition-property: opacity, transform;
+    transition-timing-function: var(--ease-out);
+  }
+  .q:not([open]) .a {
+    transform: translateY(-8px);
+  }
+  @starting-style {
+    .q[open] .a {
+      transform: translateY(-8px);
+    }
+  }
+  /* Where the browser can interpolate to auto, the row opens to its real height instead of jumping
+     (CSS only, no per-frame script); elsewhere it simply snaps open. */
+  @supports (interpolate-size: allow-keywords) {
+    .q {
+      interpolate-size: allow-keywords;
+    }
+    .q::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size 200ms var(--ease-out),
+        content-visibility 200ms allow-discrete;
+    }
+    .q[open]::details-content {
+      block-size: auto;
+      transition-duration: 280ms;
+    }
+  }
+}

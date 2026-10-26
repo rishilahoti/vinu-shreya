@@ -1,0 +1,91 @@
+/* Petals are drawn open; motion only ever closes them a little and lets them open again.
+   --close: how far each petal folds in; --d: inner petals lead, the outer ones follow. */
+.lotusMidL {
+  --close: 6deg;
+  --d: -0.6s;
+}
+.lotusMidR {
+  --close: -6deg;
+  --d: -0.6s;
+}
+.lotusOuterL {
+  --close: 17deg;
+  --d: -0.3s;
+}
+.lotusOuterR {
+  --close: -17deg;
+  --d: -0.3s;
+}
+.lotusLowL {
+  --close: 26deg;
+  --d: 0s;
+}
+.lotusLowR {
+  --close: -26deg;
+  --d: 0s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Each petal turns on its own base (centre bottom of its box). */
+  .lotusPetal {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: transform 1.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .lotusOuterL,
+  .lotusOuterR {
+    transition-delay: 80ms;
+  }
+  .lotusLowL,
+  .lotusLowR {
+    transition-delay: 160ms;
+  }
+
+  /* open={false}: folded; flipping to true opens it once, interruptibly. */
+  .lotusShut .lotusPetal {
+    transform: rotate(var(--close));
+  }
+
+  /* open unset: it breathes. */
+  .lotusLoop .lotusPetal {
+    animation: lotusBloomKf 6.4s cubic-bezier(0.45, 0, 0.55, 1) var(--d) infinite alternate;
+  }
+
+  .lotusFloat {
+    animation: lotusFloatKf 5.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  }
+
+  /* Bud sways from its stalk at the waterline (bottom right of its box). */
+  .lotusBud {
+    transform-box: fill-box;
+    transform-origin: 100% 100%;
+    animation: lotusBudKf 4.8s cubic-bezier(0.45, 0, 0.55, 1) -2.1s infinite alternate;
+  }
+}
+
+@keyframes lotusBloomKf {
+  from {
+    transform: rotate(var(--close));
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes lotusFloatKf {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes lotusBudKf {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(2.5deg);
+  }
+}

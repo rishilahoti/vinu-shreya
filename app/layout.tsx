@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Rozha_One, Eczar } from "next/font/google";
+import { Eczar } from "next/font/google";
 import { wedding } from "@/lib/content";
+import RevealObserver from "@/components/RevealObserver";
 import "./globals.css";
 
-// Both faces carry Latin + Devanagari, so the Hindi invocation and event names match the English.
-const rozha = Rozha_One({ variable: "--font-rozha", weight: "400", subsets: ["latin", "devanagari"] });
+// One family for the whole card: Eczar carries Latin and Devanagari, so the invocation and Hindi names match the English.
 const eczar = Eczar({ variable: "--font-eczar", subsets: ["latin", "devanagari"] });
 
 const title = `${wedding.groom.name} & ${wedding.bride.name} | ${wedding.dateLabel}`;
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0d27",
+  themeColor: "#da8e8c",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -24,8 +24,20 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${rozha.variable} ${eczar.variable} antialiased`}>
-      <body>{children}</body>
+    <html lang="en" className={`${eczar.variable} antialiased`} suppressHydrationWarning>
+      <head>
+        {/* Reveal states only apply when scripting works; if the bundle never runs, show everything after 5s. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "document.documentElement.classList.add('js');setTimeout(function(){if(!document.documentElement.dataset.io)document.querySelectorAll('[data-reveal]').forEach(function(e){e.classList.add('is-in')})},5000)",
+          }}
+        />
+      </head>
+      <body>
+        {children}
+        <RevealObserver />
+      </body>
     </html>
   );
 }

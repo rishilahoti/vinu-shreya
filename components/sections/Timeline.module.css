@@ -1,0 +1,113 @@
+/* The pinned deck exists only while Timeline.tsx's matchMedia puts .deck on the section (wide, tall
+   enough, motion allowed). Phones, tablets, reduced motion and no script all get the plain stack. */
+.deck .wrap {
+  height: 300svh;
+}
+.deck .stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: clamp(24px, 5svh, 64px) 32px;
+}
+.deck .band {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 640px;
+}
+.deck .item {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: var(--card);
+  margin: 0;
+}
+.deck .item > article {
+  height: 100%;
+}
+.deck .pic {
+  aspect-ratio: auto;
+  height: 100%;
+}
+
+/* A folded leaf: its visible edge is the button that brings it back. */
+.spine {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--spine);
+  cursor: pointer;
+}
+.spine:focus-visible {
+  outline-offset: -6px;
+}
+.item {
+  transition: translate 200ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .item:has(.spine:hover) {
+    translate: 0 -8px;
+  }
+  .item:has(.spine:active) {
+    translate: 0 -3px;
+  }
+}
+/* On touch there is no hover lift, so a press pushes the leaf down instead of up. */
+@media (hover: none) {
+  .item:has(.spine:active) {
+    translate: 0 3px;
+  }
+}
+
+/* A folded leaf prints only its name up the spine; the rest of the leaf is faded by the scrubbed timeline in Timeline.tsx. */
+.spineLabel {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  writing-mode: vertical-rl;
+  transform: translateX(-50%) rotate(180deg);
+  white-space: nowrap;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out);
+}
+.item[data-state="spine"] .spineLabel {
+  opacity: 1;
+}
+/* Drawings on covered or off-stage leaves rest. */
+.item[data-state="spine"] *,
+.item[data-state="later"] * {
+  animation-play-state: paused;
+}
+
+/* Wednesday: the ground behind the deck darkens one tone. */
+.dusk {
+  display: none;
+}
+.deck .dusk {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-ground-2);
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+.deck[data-day="2"] .dusk {
+  opacity: 1;
+}
+
+a.press {
+  display: inline-block;
+  transition:
+    transform var(--t-press) var(--ease-out),
+    text-decoration-color var(--t-hover) ease;
+}
+a.press:active {
+  transform: scale(0.97);
+}

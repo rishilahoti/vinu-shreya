@@ -1,53 +1,83 @@
-/* Ambient loops for the countdown. All of it is skipped under reduced motion. */
+/* The reply card lies on the field at a tilt; it drops into place when it enters (RevealObserver adds .is-in). */
+.card {
+  --tilt: 1deg;
+  transform: rotate(var(--tilt));
+}
+@media (min-width: 64rem) {
+  .card {
+    --tilt: 2deg;
+  }
+}
+/* Outranks the global reveal: the card falls from above and settles into its tilt instead of rising.
+   All in `transform`: the CSS minifier folds separate translate/rotate into it anyway. */
 @media (prefers-reduced-motion: no-preference) {
-  .lantern {
-    animation: rise var(--dur) linear var(--delay) infinite;
-    will-change: transform;
+  :global(.js) .card[data-reveal] {
+    transform: translateY(-24px) rotate(0deg);
+    transition:
+      opacity 600ms var(--ease-out),
+      transform 600ms var(--ease-out);
   }
-  .lantern > svg {
-    animation: drift 4.6s ease-in-out infinite alternate;
-  }
-  .glint {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: glint 5.2s ease-in-out infinite;
+  :global(.js) .card[data-reveal]:global(.is-in) {
+    transform: translateY(0) rotate(var(--tilt));
   }
 }
 
-@keyframes rise {
-  0% {
-    transform: translate3d(0, 75vh, 0);
-    opacity: 0;
-  }
-  12%,
-  78% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate3d(var(--dx), -85vh, 0);
-    opacity: 0;
+/* The ink bar across the card. */
+.bar {
+  transition:
+    transform var(--t-press) var(--ease-out),
+    background-color var(--t-hover) ease;
+}
+.bar:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bar:hover {
+    background-color: var(--color-field-2);
   }
 }
+/* On paper the field's marigold focus ring is too faint: use ink. */
+.card .bar:focus-visible {
+  outline-color: var(--color-ink);
+}
 
-@keyframes drift {
+/* Countdown digits: each column clips its own roll. */
+.digits {
+  display: flex;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.slot {
+  display: inline-grid;
+  overflow: clip;
+  line-height: 1.12;
+}
+.slot > span {
+  grid-area: 1 / 1;
+}
+.out {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .in {
+    animation: rollIn 300ms var(--ease-out);
+  }
+  .out {
+    animation: rollOut 300ms var(--ease-out);
+  }
+}
+@keyframes rollIn {
   from {
-    transform: translateX(-4px) rotate(-4deg);
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+@keyframes rollOut {
+  from {
+    opacity: 1;
+    transform: none;
   }
   to {
-    transform: translateX(4px) rotate(4deg);
-  }
-}
-
-
-@keyframes glint {
-  0%,
-  72%,
-  100% {
     opacity: 0;
-    transform: scale(0.3) rotate(0deg);
-  }
-  84% {
-    opacity: 1;
-    transform: scale(1.1) rotate(45deg);
+    transform: translateY(-100%);
   }
 }

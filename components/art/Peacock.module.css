@@ -1,0 +1,71 @@
+.neck,
+.crest,
+.fan {
+  transform-box: fill-box;
+}
+/* The neck group carries an invisible frame centred on the base of the neck. */
+.neck {
+  transform-origin: 50% 50%;
+}
+/* Crest feathers rise from the crown; fan bundles rise from the tail base. */
+.crest,
+.fan {
+  transform-origin: 50% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .neck {
+    animation: bob 3.6s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  .crest {
+    animation: shiver 3.2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  .fan {
+    animation: spread 5.6s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+  }
+  /* A mirrored bird beside a plain one should not nod in unison. */
+  .flip .neck {
+    animation-delay: -1.9s;
+  }
+  .flip .crest {
+    animation-delay: -1.1s;
+  }
+}
+
+@keyframes bob {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate(-1px, 1.5px) rotate(-5deg);
+  }
+}
+
+@keyframes shiver {
+  0%,
+  52%,
+  100% {
+    transform: rotate(0deg);
+  }
+  8% {
+    transform: rotate(5deg);
+  }
+  18% {
+    transform: rotate(-3.5deg);
+  }
+  28% {
+    transform: rotate(2.5deg);
+  }
+  38% {
+    transform: rotate(-1.2deg);
+  }
+}
+
+@keyframes spread {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(var(--spread));
+  }
+}
