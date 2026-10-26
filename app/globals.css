@@ -180,7 +180,7 @@ button.link:active {
 
 /* Sections scrolled well out of view rest their drawings (RevealObserver sets data-rest). */
 [data-rest] * {
-  animation-play-state: paused;
+  animation-play-state: paused !important; /* the drawings set it back to running via their animation shorthand */
 }
 
 .sr-only {

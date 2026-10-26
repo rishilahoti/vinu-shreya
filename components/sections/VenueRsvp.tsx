@@ -83,7 +83,8 @@ export default function VenueRsvp() {
     const ro = new ResizeObserver(() => {
       if (first) return void (first = false);
       window.clearTimeout(t);
-      t = window.setTimeout(() => ScrollTrigger.refresh(), 300);
+      // Safe refresh: waits for any smooth scroll in flight (a "Count me in" glide to #rsvp) instead of cutting it short.
+      t = window.setTimeout(() => ScrollTrigger.refresh(true), 300);
     });
     if (section.current) ro.observe(section.current);
     return () => {
