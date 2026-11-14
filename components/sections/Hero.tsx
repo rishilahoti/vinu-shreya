@@ -24,8 +24,8 @@ export default function Hero() {
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => {
-      // Hold the view while the tab is hidden or the hero is scrolled away (data-rest, set by RevealObserver).
-      if (!document.hidden && !document.getElementById("hero")?.hasAttribute("data-rest"))
+      // Hold the view while the tab is hidden or the hero is scrolled away (<html data-rest>, set by RevealObserver).
+      if (!document.hidden && !document.documentElement.dataset.rest?.split(" ").includes("hero"))
         setViews(([t]) => [(t + 1) % hero.palace.length, t]);
     }, STEP);
     return () => clearInterval(id);
@@ -85,6 +85,7 @@ export default function Hero() {
               fill
               sizes="(min-width: 768px) 50vw, 100vw"
               preload={i === 0}
+              loading={i === 0 ? "eager" : undefined}
               className={s.view}
               style={{ objectPosition: p.focal, opacity: i === top || i === under ? 1 : 0, zIndex: i === top ? 2 : i === under ? 1 : 0 }}
             />
