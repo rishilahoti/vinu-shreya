@@ -178,8 +178,15 @@ button.link:active {
   }
 }
 
-/* Sections scrolled well out of view rest their drawings (RevealObserver sets data-rest). */
-[data-rest] * {
+/* Sections scrolled well out of view rest their drawings (RevealObserver lists them in <html data-rest>). */
+html[data-rest~="hero"] #hero *,
+html[data-rest~="blessing"] #blessing *,
+html[data-rest~="ceremonies"] #ceremonies *,
+html[data-rest~="letter"] #letter *,
+html[data-rest~="getting-there"] #getting-there *,
+html[data-rest~="rsvp"] #rsvp *,
+html[data-rest~="dates"] #dates *,
+html[data-rest~="footer"] #footer * {
   animation-play-state: paused !important; /* the drawings set it back to running via their animation shorthand */
 }
 

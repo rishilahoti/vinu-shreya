@@ -39,6 +39,7 @@ export default function Venue() {
               <Image
                 src={venue.square.src}
                 alt={venue.square.alt}
+                loading="eager"
                 fill
                 sizes="(min-width: 1024px) 16vw, (min-width: 768px) 30vw, 38vw"
                 className="object-cover"

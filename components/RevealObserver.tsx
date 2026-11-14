@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 // Adds .is-in to every [data-reveal] once it enters the viewport. Never replays, never leaves content hidden.
-// Also marks sections scrolled well out of view with data-rest, so their looping drawings pause,
+// Also lists the sections scrolled well out of view in <html data-rest="…ids">, so their looping drawings pause,
 // and makes in-page links scroll smoothly.
 export default function RevealObserver() {
   useEffect(() => {
@@ -20,8 +20,14 @@ export default function RevealObserver() {
       { rootMargin: "0px 0px -12% 0px", threshold: 0.1 },
     );
     targets.forEach((el) => io.observe(el));
+    // Kept on <html>, not on the sections: React owns their attributes, and one added before a section
+    // hydrates is reported as a hydration mismatch.
+    const resting = new Set<string>();
     const rest = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.target.toggleAttribute("data-rest", !e.isIntersecting)),
+      (entries) => {
+        entries.forEach((e) => (e.isIntersecting ? resting.delete(e.target.id) : resting.add(e.target.id)));
+        document.documentElement.dataset.rest = [...resting].join(" ");
+      },
       { rootMargin: "25% 0px" },
     );
     document.querySelectorAll("main > *").forEach((el) => rest.observe(el));
