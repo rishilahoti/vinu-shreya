@@ -43,7 +43,7 @@ function message(name: string, attend: Attend, guests: number, chosen: WeddingEv
         ]
       : [`${R.attend.no}, with all our love and blessings.`]),
     note && `Note: ${note}`,
-    yes ? "See you in Indore!" : "Sending our love from here.",
+    yes ? "See you at Rambagh!" : "Sending our love from here.",
   ]
     .filter(Boolean)
     .join("\n");

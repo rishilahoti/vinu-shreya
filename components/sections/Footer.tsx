@@ -1,12 +1,29 @@
-// The back of the card: the families' sign-off, the address block under a Hawa Mahal stamp and the printer's imprint.
+// The back of the card: the families' sign-off, the address block under a Hawa Mahal stamp, the printer's imprint
+// and a credit for every found picture the page shows.
 import Image from "next/image";
 import { wedding } from "@/lib/content";
 import Stripe from "@/components/Stripe";
 import Toran from "@/components/art/Toran";
 import Peacock from "@/components/art/Peacock";
+import palace from "@/public/art/palace/credits.json";
+import paintings from "@/public/art/paintings/credits.json";
+import video from "@/public/art/video/credits.json";
 import s from "./Footer.module.css";
 
 const { footer, venue, rsvp } = wedding;
+
+// Credit only the found pictures the page actually shows, in page order.
+const shown = [
+  ...wedding.hero.palace,
+  wedding.intro.painting,
+  ...wedding.events.map((e) => e.painting),
+  venue.tall,
+  venue.square,
+  footer.stamp,
+  wedding.clip,
+];
+const found = [...palace, ...paintings, ...video];
+const credits = shown.flatMap(({ src }) => found.filter((c) => c.file === `public${src}`));
 
 const [street, ...place] = venue.address.split(", ");
 const address = [
@@ -84,7 +101,7 @@ export default function Footer() {
                 </div>
 
                 <div className="flex flex-col justify-between gap-10">
-                  {/* the stamp: the resort lawn on a perforated paper margin, stuck on slightly askew */}
+                  {/* the stamp: Hawa Mahal on a perforated paper margin, stuck on slightly askew */}
                   <div
                     className="absolute top-[clamp(1.5rem,3vw,2.5rem)] right-[clamp(1.5rem,4.5vw,4rem)] aspect-[3/4] w-16 rotate-[4deg] bg-paper-2 p-1.5 md:static md:w-[88px] md:self-end"
                     style={{ clipPath: "url(#stamp-perf)" }}
@@ -93,7 +110,6 @@ export default function Footer() {
                       <Image
                         src={footer.stamp.src}
                         alt={footer.stamp.alt}
-                        loading="eager"
                         fill
                         sizes="88px"
                         className="object-cover"
@@ -113,6 +129,20 @@ export default function Footer() {
                     </ul>
                   </address>
                 </div>
+              </div>
+
+              <div className={`mt-16 px-[clamp(1.5rem,4.5vw,4rem)] ${s.credits}`}>
+                <p className="t-small max-w-[60ch] text-ink">{footer.creditsIntro}</p>
+                <ul className="t-small mt-4 gap-x-[var(--gutter)] text-muted md:columns-2 lg:columns-3">
+                  {credits.map((c) => {
+                    const m = /^"([^"]+)"(.*)$/.exec(c.credit);
+                    return (
+                      <li key={c.file} className="mb-2 break-inside-avoid">
+                        “<a className="link text-ink" href={c.page}>{m ? m[1] : c.title}</a>”{m ? m[2] : ""}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
 
               <p className="t-small mt-12 px-[clamp(1.5rem,4.5vw,4rem)] text-center text-ink">{footer.imprint}</p>
