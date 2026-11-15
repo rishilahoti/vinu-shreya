@@ -1,0 +1,10 @@
+/* "Vinamra & Shreya" is wider than the reference's "Rachit & Kanchi"; shrink the English names only where they would wrap. */
+@media (min-width: 360px) and (max-width: 399.98px) {
+  .nameM { font-size: min(46px, 12vw); }
+}
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .nameD { font-size: 54px; }
+}
+@media (min-width: 1280px) {
+  .nameD { font-size: 64px; }
+}

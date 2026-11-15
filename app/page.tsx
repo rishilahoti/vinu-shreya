@@ -1,24 +1,22 @@
-import Hero from "@/components/sections/Hero";
-import Couple from "@/components/sections/Couple";
-import Timeline from "@/components/sections/Timeline";
-import Meet from "@/components/sections/Meet";
-import Venue from "@/components/sections/Venue";
-import VenueRsvp from "@/components/sections/VenueRsvp";
-import Countdown from "@/components/sections/Countdown";
-import Footer from "@/components/sections/Footer";
+import Shell from "@/components/invite/Shell";
+import Hero from "@/components/invite/Hero";
+import Moments from "@/components/invite/Moments";
+import Programme from "@/components/invite/Programme";
+import DressCode from "@/components/invite/DressCode";
+import Venue from "@/components/invite/Venue";
+import Timeline from "@/components/invite/Timeline";
+import Footer from "@/components/invite/Footer";
 
-// The kankotri, leaf by leaf: the card, the blessing, the ceremonies, a note from us, getting there, the reply coupon, the dates, the back of the card.
 export default function Home() {
   return (
-    <main className="w-full overflow-x-clip">
+    <Shell>
       <Hero />
-      <Couple />
-      <Timeline />
-      <Meet />
+      <Moments />
+      <Programme />
+      <DressCode />
       <Venue />
-      <VenueRsvp />
-      <Countdown />
+      <Timeline />
       <Footer />
-    </main>
+    </Shell>
   );
 }
