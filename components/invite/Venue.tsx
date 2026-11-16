@@ -1,12 +1,13 @@
 "use client";
 
 // Copy of the reference's venue section (rachit-weds-kanchi, chunk 0_6yjuvmwh1-f.js): carousel with fade, lightbox, copy-address feedback.
-import { useRef, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence, useInView } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Check, ChevronLeft, ChevronRight, Copy, ExternalLink, MapPin, Maximize2, Navigation, PhoneCall, Sparkles, X } from "lucide-react";
 import { invite } from "@/lib/invite";
 import { useLang } from "./lang";
+import { Parallax, Reveal, RevealGroup, RevealItem } from "./reveal";
 
 const v = invite.venue;
 
@@ -31,6 +32,7 @@ function CornerSprig({ position }: { position: "top-left" | "top-right" }) {
   const pos = position === "top-left" ? "top-2 left-2 sm:top-3 sm:left-3" : "top-2 right-2 sm:top-3 sm:right-3 -scale-x-100";
   return (
     <div className={`absolute pointer-events-none select-none z-0 ${pos} `}>
+      <Parallax speed={24}>
       <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 sm:w-16 md:w-20 h-auto opacity-45 drop-shadow-[0_1px_4px_rgba(197,155,39,0.18)]">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
@@ -53,9 +55,18 @@ function CornerSprig({ position }: { position: "top-left" | "top-right" }) {
         <circle cx="74" cy="16" r="1.6" fill="#FFF2B2" />
         <circle cx="116" cy="4" r="1.8" fill="#FFF2B2" />
       </svg>
+      </Parallax>
     </div>
   );
 }
+
+// The photo frame is only ~200px tall on a phone: travel must stay under the 6% overscan of scale 1.12.
+const LG = "(min-width: 1024px)";
+const subscribeLg = (cb: () => void) => {
+  const m = matchMedia(LG);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
 
 function SideFlourish({ flip }: { flip?: boolean }) {
   return (
@@ -132,24 +143,29 @@ export default function Venue() {
   const [copied, setCopied] = useState(false);
   const [idx, setIdx] = useState(0);
   const [lightbox, setLightbox] = useState<(typeof PHOTOS)[number] | null>(null);
-  const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const lg = useSyncExternalStore(subscribeLg, () => matchMedia(LG).matches, () => false);
   const photo = PHOTOS[idx];
   const next = () => setIdx((i) => (i + 1) % PHOTOS.length);
   const prev = () => setIdx((i) => (i - 1 + PHOTOS.length) % PHOTOS.length);
   const caption = (p: (typeof PHOTOS)[number]) => (hi ? p.hi : p.alt);
-  const enter = { opacity: 0, y: 24 };
 
   return (
-    <section id="venue" ref={ref} className="relative bg-gradient-to-b from-[#FAF7F2] via-[#FFFFFF] to-[#FAF7F2] py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden scroll-mt-20">
-      <div className="absolute top-1/4 -left-40 w-96 h-96 bg-[#C59B27]/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-40 w-96 h-96 bg-[#C59B27]/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#C59B27_0.6px,transparent_0.6px)] [background-size:24px_24px] opacity-[0.14] pointer-events-none" />
+    <section id="venue" className="relative bg-gradient-to-b from-[#FAF7F2] via-[#FFFFFF] to-[#FAF7F2] py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden scroll-mt-20">
+      <Parallax speed={80} className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 -left-40 w-96 h-96 bg-[#C59B27]/10 rounded-full blur-[140px] pointer-events-none" />
+      </Parallax>
+      <Parallax speed={50} className="absolute inset-0 pointer-events-none">
+        <div className="absolute bottom-1/4 -right-40 w-96 h-96 bg-[#C59B27]/10 rounded-full blur-[140px] pointer-events-none" />
+      </Parallax>
+      {/* Overscan by 48px (two dot cells) so the drifting grid never shows a bare edge and the dots stay where they were. */}
+      <Parallax speed={40} className="absolute inset-x-0 -inset-y-12 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(#C59B27_0.6px,transparent_0.6px)] [background-size:24px_24px] opacity-[0.14] pointer-events-none" />
+      </Parallax>
       <CornerSprig position="top-left" />
       <CornerSprig position="top-right" />
 
       <div className="max-w-6xl xl:max-w-7xl mx-auto relative z-10">
-        <motion.div initial={enter} animate={inView ? { opacity: 1, y: 0 } : enter} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="text-center mb-12 sm:mb-16">
+        <Reveal className="text-center mb-12 sm:mb-16">
           <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-[#C59B27]/40 bg-gradient-to-r from-[#FFFBF0] via-[#FFFFFF] to-[#FFFBF0] text-[#8A6516] shadow-xs mb-3.5 sm:mb-4 max-w-full">
             <span className="text-[#C59B27] text-xs animate-spin-slow shrink-0">✦</span>
             <span className={`text-[10px] min-[360px]:text-[11px] sm:text-xs font-bold uppercase tracking-[0.16em] sm:tracking-[0.24em] truncate ${hi ? "font-serif-hi" : "font-cinzel"}`}>{t(copy.pill)}</span>
@@ -158,15 +174,18 @@ export default function Venue() {
           <h2 className={`text-2xl min-[360px]:text-3xl sm:text-5xl md:text-6xl lg:text-[64px] font-bold text-[#1C1917] tracking-tight leading-[1.15] mb-2 sm:mb-3 drop-shadow-xs ${hi ? "font-display-hi" : "font-cinzel"}`}>{t(v.name)}</h2>
           <p className={`text-xs min-[360px]:text-sm sm:text-base md:text-lg font-semibold text-[#8A6516] mb-3 ${hi ? "font-serif-hi" : "font-serif"}`}>{t(v.area)}</p>
           <Filigree />
-        </motion.div>
+        </Reveal>
 
-        <motion.div initial={enter} animate={inView ? { opacity: 1, y: 0 } : enter} transition={{ duration: 0.85, delay: 0.15 }} className="relative rounded-xl sm:rounded-2xl border border-[#C59B27]/50 ring-1 ring-[#C59B27]/15 bg-[#FCFAF6] shadow-[0_20px_50px_-10px_rgba(26,16,10,0.12),0_0_20px_rgba(197,155,39,0.06)] overflow-hidden mb-16">
+        {/* No blur here: the card holds the photo carousel, too big a layer to filter. */}
+        <Reveal blur={0} delay={0.08} className="relative rounded-xl sm:rounded-2xl border border-[#C59B27]/50 ring-1 ring-[#C59B27]/15 bg-[#FCFAF6] shadow-[0_20px_50px_-10px_rgba(26,16,10,0.12),0_0_20px_rgba(197,155,39,0.06)] overflow-hidden mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch relative z-10">
             <div className="lg:col-span-7 flex flex-col bg-[#0A0D1B] relative border-b lg:border-b-0 lg:border-r border-[#C59B27]/25">
               <div className="relative aspect-[16/10] sm:aspect-[16/9.5] lg:aspect-auto lg:h-[460px] w-full overflow-hidden group">
                 <AnimatePresence mode="wait">
                   <motion.div key={photo.src} initial={{ opacity: 0, scale: 1.04 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="absolute inset-0">
-                    <Image src={photo.src} alt={caption(photo)} fill priority={idx === 0} className="object-cover object-center transition-transform duration-700 group-hover:scale-103" sizes="(max-width: 1024px) 100vw, 60vw" />
+                    <Parallax speed={lg ? 26 : 10} scale={1.12} className="absolute inset-0">
+                      <Image src={photo.src} alt={caption(photo)} fill priority={idx === 0} className="object-cover object-center transition-transform duration-700 group-hover:scale-103" sizes="(max-width: 1024px) 100vw, 60vw" />
+                    </Parallax>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/25 pointer-events-none" />
                   </motion.div>
                 </AnimatePresence>
@@ -228,9 +247,9 @@ export default function Venue() {
               </div>
             </div>
 
-            <div className="lg:col-span-5 p-4 min-[360px]:p-5 sm:p-7 lg:p-8 flex flex-col justify-between bg-gradient-to-b from-[#FCFAF6] via-[#FAF6EE] to-[#F7EFE2]">
+            <RevealGroup delay={0.2} className="lg:col-span-5 p-4 min-[360px]:p-5 sm:p-7 lg:p-8 flex flex-col justify-between bg-gradient-to-b from-[#FCFAF6] via-[#FAF6EE] to-[#F7EFE2]">
               <div>
-                <div>
+                <RevealItem>
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-[#C59B27]/40 bg-[#FFFDF9] text-[#8A6516] text-[10px] sm:text-xs font-bold uppercase tracking-[0.16em] sm:tracking-[0.2em] mb-2 sm:mb-2.5 shadow-2xs">
                     <Sparkles className="h-3 w-3 text-[#C59B27]" aria-hidden="true" />
                     <span>{t(copy.chip)}</span>
@@ -240,11 +259,13 @@ export default function Venue() {
                     <MapPin className="w-3.5 h-3.5 text-[#C59B27] shrink-0" aria-hidden="true" />
                     <span>{t(v.area)}</span>
                   </p>
-                </div>
+                </RevealItem>
+                <RevealItem>
                 <p className={`text-[12.5px] min-[360px]:text-[13.5px] sm:text-[14.5px] text-[#292524] font-sans font-medium leading-relaxed mb-4 sm:mb-5 ${hi ? "font-serif-hi" : ""}`}>{t(v.about)}</p>
+                </RevealItem>
               </div>
 
-              <div className="space-y-2.5 pt-2 sm:pt-4">
+              <RevealItem className="space-y-2.5 pt-2 sm:pt-4">
                 <a href={v.mapsUrl} target="_blank" rel="noopener noreferrer" className="relative group w-full overflow-hidden rounded-xl p-[2px] bg-gradient-to-r from-[#8A6516] via-[#E5C365] to-[#8A6516] shadow-[0_6px_20px_rgba(197,155,39,0.30)] hover:shadow-[0_10px_28px_rgba(197,155,39,0.45)] transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] block cursor-pointer">
                   <div className="w-full py-3 min-[360px]:py-3.5 sm:py-4 px-4 sm:px-6 rounded-[10px] bg-gradient-to-r from-[#9B7018] via-[#C59B27] to-[#8A6516] group-hover:from-[#A87A1A] group-hover:via-[#D4AF37] group-hover:to-[#9B7018] flex items-center justify-center gap-2.5 sm:gap-3 text-white transition-colors duration-300">
                     <Navigation className="w-4 h-4 sm:w-5 sm:h-5 text-[#FFF9E6] fill-white/25 group-hover:rotate-12 transition-transform duration-300 shrink-0" aria-hidden="true" />
@@ -285,10 +306,10 @@ export default function Venue() {
                     {invite.contact.display}
                   </a>
                 </div>
-              </div>
-            </div>
+              </RevealItem>
+            </RevealGroup>
           </div>
-        </motion.div>
+        </Reveal>
       </div>
 
       <AnimatePresence>

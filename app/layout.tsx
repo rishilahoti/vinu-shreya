@@ -20,7 +20,7 @@ export const viewport: Viewport = { themeColor: "#FAF8F5", width: "device-width"
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="scroll-smooth bg-[#FAF8F5] text-[#1C1917] antialiased" suppressHydrationWarning>
+    <html lang="en" className="bg-[#FAF8F5] text-[#1C1917] antialiased" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

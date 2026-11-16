@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useInView } from "motion/react";
 import { Pause, Play } from "lucide-react";
 import { invite } from "@/lib/invite";
 import { useLang } from "./lang";
+import { EASE_OUT, Parallax, RevealGroup, RevealItem, useReduce } from "./reveal";
 
 const copy = {
   pill: { en: "Cinematic Celebration", hi: "॥ मांगलिक चलचित्र ॥" },
@@ -28,6 +29,7 @@ function CornerSprig({ position }: { position: keyof typeof SPRIG_POS }) {
   const g = `url(#goldSprig_${position})`;
   return (
     <div className={`absolute pointer-events-none select-none z-0 ${SPRIG_POS[position]} opacity-35`}>
+      <Parallax speed={28}>
       <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 sm:w-16 md:w-20 h-auto opacity-45 drop-shadow-[0_1px_4px_rgba(197,155,39,0.18)]">
         <defs>
           <linearGradient id={`goldSprig_${position}`} x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
@@ -50,6 +52,7 @@ function CornerSprig({ position }: { position: keyof typeof SPRIG_POS }) {
         <circle cx="74" cy="16" r="1.6" fill="#FFF2B2" />
         <circle cx="116" cy="4" r="1.8" fill="#FFF2B2" />
       </svg>
+      </Parallax>
     </div>
   );
 }
@@ -123,6 +126,7 @@ function Filigree() {
 export default function Moments() {
   const { lang, t } = useLang();
   const hi = lang === "hi";
+  const reduce = useReduce();
   const sectionRef = useRef<HTMLElement>(null);
   const inView = useInView(sectionRef, { amount: 0.15 });
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -172,20 +176,36 @@ export default function Moments() {
     >
       <CornerSprig position="top-left" />
       <CornerSprig position="bottom-right" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-gradient-to-b from-[#F5E6BE]/25 via-transparent to-transparent rounded-full blur-[120px] pointer-events-none z-0" />
-      <div className="max-w-2xl mx-auto text-center mb-8 sm:mb-12 relative z-10 px-2">
+      <Parallax speed={70} className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[850px] h-[550px] bg-gradient-to-b from-[#F5E6BE]/25 via-transparent to-transparent rounded-full blur-[120px] pointer-events-none z-0" />
+      </Parallax>
+      <RevealGroup className="max-w-2xl mx-auto text-center mb-8 sm:mb-12 relative z-10 px-2">
+        <RevealItem>
         <div className="inline-flex items-center gap-2 mb-2.5 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 border border-[#C59B27]/40 shadow-2xs">
           <span className="text-[#C59B27] text-xs">✦</span>
           <span className={`text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.24em] uppercase text-[#8A6516] ${hi ? "font-serif-hi" : "font-cinzel"}`}>{t(copy.pill)}</span>
           <span className="text-[#C59B27] text-xs">✦</span>
         </div>
+        </RevealItem>
+        <RevealItem>
         <h2 className={`text-2xl min-[360px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B4D3E] tracking-tight leading-[1.15] ${hi ? "font-display-hi" : "font-cinzel"}`}>{t(copy.title)}</h2>
-        <div className="my-2.5 sm:my-3.5 flex justify-center">
+        </RevealItem>
+        <RevealItem className="my-2.5 sm:my-3.5 flex justify-center">
           <Filigree />
-        </div>
+        </RevealItem>
+        <RevealItem>
         <p className={`text-xs sm:text-sm text-[#78716C] max-w-lg mx-auto leading-relaxed px-2 ${hi ? "font-serif-hi" : "font-sans"}`}>{t(copy.body)}</p>
-      </div>
+        </RevealItem>
+      </RevealGroup>
       <div className="max-w-xl sm:max-w-5xl mx-auto relative z-10 w-full flex flex-col items-center">
+        {/* the film frame is a big layer: rise + fade only, no filter (Reveal would leave blur() on it) */}
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "0px 0px -12% 0px" }}
+          transition={reduce ? { duration: 0.4, delay: 0.08, y: { duration: 0 } } : { duration: 0.9, ease: EASE_OUT, delay: 0.08 }}
+        >
         <div
           className="relative w-full aspect-[4/3] sm:aspect-video rounded-2xl sm:rounded-3xl overflow-hidden bg-[#0A0A0C] border-2 border-[#D4AF37]/60 shadow-[0_20px_50px_-15px_rgba(26,16,10,0.25),0_0_35px_rgba(212,175,55,0.16)] ring-1 ring-[#FFF2B2]/20 group cursor-pointer flex flex-col justify-end"
           onMouseEnter={() => setHover(true)}
@@ -264,6 +284,7 @@ export default function Moments() {
             </h2>
           </div>
         </div>
+        </motion.div>
       </div>
     </section>
   );

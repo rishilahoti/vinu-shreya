@@ -7,6 +7,7 @@ import { LangProvider, useLang } from "./lang";
 import Gate from "./Gate";
 import LangToggle, { LANG_KEY } from "./LangToggle";
 import MusicToggle from "./MusicToggle";
+import SmoothScroll from "./SmoothScroll";
 
 function Frame({ children }: { children: ReactNode }) {
   const { setLang } = useLang();
@@ -21,6 +22,7 @@ function Frame({ children }: { children: ReactNode }) {
 
   return (
     <main className="min-h-screen bg-[#FFFFFF] text-[#1C1917] relative selection:bg-[#C59B27]/20 selection:text-[#9B2C47] paper-texture overflow-x-hidden">
+      <SmoothScroll held={!revealed} />
       <Gate onComplete={() => setRevealed(true)} />
       {revealed && <LangToggle />}
       {children}

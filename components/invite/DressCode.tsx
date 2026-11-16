@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { invite } from "@/lib/invite";
 import { useLang } from "@/components/invite/lang";
+import { Parallax, Reveal, RevealGroup, RevealItem } from "./reveal";
 
 const copy = {
   pill: { en: "Celebration Couture & Attire", hi: "॥ मांगलिक परिधान निर्देशिका ॥" },
@@ -28,7 +29,8 @@ function Sprig({ position }: { position: "top-left" | "bottom-right" }) {
   const pos = position === "top-left" ? "top-2 left-2 sm:top-3 sm:left-3" : "bottom-2 right-2 sm:bottom-3 sm:right-3 -scale-x-100 -scale-y-100";
   const f = `url(#${id})`;
   return (
-    <div className={`absolute pointer-events-none select-none z-0 ${pos} opacity-40`}>
+    // Tailwind's -scale-* flips the Parallax translate too, so the bottom sprig takes the opposite sign to drift the same way.
+    <Parallax speed={position === "top-left" ? 28 : -28} className={`absolute pointer-events-none select-none z-0 ${pos} opacity-40`}>
       <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 sm:w-16 md:w-20 h-auto opacity-45 drop-shadow-[0_1px_4px_rgba(197,155,39,0.18)]">
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
@@ -51,7 +53,7 @@ function Sprig({ position }: { position: "top-left" | "bottom-right" }) {
         <circle cx="74" cy="16" r="1.6" fill="#FFF2B2" />
         <circle cx="116" cy="4" r="1.8" fill="#FFF2B2" />
       </svg>
-    </div>
+    </Parallax>
   );
 }
 
@@ -127,36 +129,39 @@ export default function DressCode() {
     <section id="dress-code" className="relative bg-[#FAF7F2] scroll-mt-16 sm:scroll-mt-20 py-12 sm:py-16 md:py-20 px-3 sm:px-6 lg:px-8 overflow-hidden border-t border-[#C59B27]/30 select-none">
       <Sprig position="top-left" />
       <Sprig position="bottom-right" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-gradient-to-b from-[#FDF3D6]/20 via-transparent to-transparent rounded-full blur-[120px] pointer-events-none z-0" />
+      <Parallax speed={70} className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-gradient-to-b from-[#FDF3D6]/20 via-transparent to-transparent rounded-full blur-[120px] pointer-events-none z-0">{null}</Parallax>
       <div className="max-w-4xl mx-auto relative z-10">
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 md:mb-16">
+        <RevealGroup className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 md:mb-16">
+          <RevealItem>
           <div className="inline-flex items-center gap-2 mb-2 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 border border-[#C59B27]/40 shadow-2xs">
             <span className="text-[#C59B27] text-xs">✦</span>
             <span className={`text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.24em] uppercase text-[#8A6516] ${small}`}>{t(copy.pill)}</span>
             <span className="text-[#C59B27] text-xs">✦</span>
           </div>
+          </RevealItem>
+          <RevealItem>
           <h2 className={`text-2xl min-[360px]:text-3xl sm:text-4xl md:text-5xl font-bold text-[#1B4D3E] tracking-tight leading-[1.15] ${display}`}>{t(copy.title)}</h2>
-          <div className="my-2.5 sm:my-3.5 flex justify-center">
+          </RevealItem>
+          <RevealItem className="my-2.5 sm:my-3.5 flex justify-center">
             <Filigree />
-          </div>
+          </RevealItem>
+          <RevealItem>
           <p className={`text-xs min-[360px]:text-[13px] sm:text-base text-[#785E3A] font-medium leading-relaxed ${serif}`}>{t(copy.intro)}</p>
-        </div>
+          </RevealItem>
+        </RevealGroup>
         <div className="space-y-8 min-[360px]:space-y-10 sm:space-y-14 md:space-y-18">
           {invite.events.map((ev, i) => {
             const even = i % 2 === 0;
             const webp = ev.attire;
             const key = webp.split("/").pop()!.replace("-attire.webp", "");
             return (
-              <motion.div
+              <div
                 key={ev.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.55, delay: 0.08 * i }}
                 className={`group flex items-center gap-3 min-[360px]:gap-4 sm:gap-8 md:gap-12 ${even ? "flex-row" : "flex-row-reverse"}`}
               >
-                <div className="w-[46%] min-[360px]:w-[48%] sm:w-[46%] md:w-[44%] shrink-0 flex items-center justify-center relative min-h-[155px] min-[360px]:min-h-[180px] sm:min-h-[230px] md:min-h-[270px]">
-                  <div className={`absolute w-[102px] h-[102px] min-[360px]:w-[120px] min-[360px]:h-[120px] sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full bg-gradient-to-br ${halo[key]} border border-[#D4AF37]/35 shadow-[0_6px_20px_rgba(197,155,39,0.14)]`} />
+                <Reveal delay={0.08} className="w-[46%] min-[360px]:w-[48%] sm:w-[46%] md:w-[44%] shrink-0 flex items-center justify-center relative min-h-[155px] min-[360px]:min-h-[180px] sm:min-h-[230px] md:min-h-[270px]">
+                  <Parallax speed={-14} className={`absolute w-[102px] h-[102px] min-[360px]:w-[120px] min-[360px]:h-[120px] sm:w-44 sm:h-44 md:w-52 md:h-52 rounded-full bg-gradient-to-br ${halo[key]} border border-[#D4AF37]/35 shadow-[0_6px_20px_rgba(197,155,39,0.14)]`}>{null}</Parallax>
+                  <Parallax speed={24} className="relative z-10">
                   <picture className="relative z-10 flex items-center justify-center">
                     <source srcSet={webp} type="image/webp" />
                     { }
@@ -168,8 +173,9 @@ export default function DressCode() {
                       className="w-auto h-[150px] min-[360px]:h-[175px] min-[400px]:h-[195px] sm:h-56 md:h-68 lg:h-72 object-contain drop-shadow-[0_4px_14px_rgba(28,25,23,0.18)] transition-transform duration-500 group-hover:scale-105"
                     />
                   </picture>
-                </div>
-                <div className={`w-[54%] min-[360px]:w-[52%] sm:w-[54%] md:w-[56%] flex flex-col justify-center ${even ? "text-left pl-1 sm:pl-3" : "text-right pr-1 sm:pr-3"}`}>
+                  </Parallax>
+                </Reveal>
+                <Reveal className={`w-[54%] min-[360px]:w-[52%] sm:w-[54%] md:w-[56%] flex flex-col justify-center ${even ? "text-left pl-1 sm:pl-3" : "text-right pr-1 sm:pr-3"}`}>
                   <span className={`text-[8.5px] min-[360px]:text-[9.5px] sm:text-xs font-bold tracking-[0.16em] uppercase text-[#8A6516] mb-0.5 sm:mb-1 block ${small}`}>{hi ? `अनुष्ठान ${ev.num}` : `CEREMONY ${ev.num}`}</span>
                   <h3 className={`text-[13px] min-[360px]:text-[14.5px] sm:text-xl md:text-2xl lg:text-[26px] font-bold text-[#1B4D3E] tracking-tight leading-[1.18] ${display}`}>{t(ev.name)}</h3>
                   <p className={`text-[10px] min-[360px]:text-[11px] sm:text-xs md:text-sm text-[#785E3A] font-medium mt-0.5 sm:mt-1 ${serif}`}>{t(ev.dateLong)}</p>
@@ -177,8 +183,8 @@ export default function DressCode() {
                     <span className={`text-[9.5px] min-[360px]:text-[10.5px] sm:text-xs font-bold uppercase tracking-wider text-[#9E2A2B] block ${small}`}>{t(copy.label)}</span>
                     <p className={`text-[10.5px] min-[360px]:text-[11.5px] sm:text-xs md:text-sm lg:text-[15px] font-medium text-[#4A1521] leading-snug mt-0.5 ${serif}`}>{t(ev.dress)}</p>
                   </div>
-                </div>
-              </motion.div>
+                </Reveal>
+              </div>
             );
           })}
         </div>

@@ -1,6 +1,8 @@
 "use client";
 
 // 1:1 copy of the reference hero: falling-petal canvas, separate mobile / desktop layouts, scroll parallax.
+import { scrollToTarget } from "./SmoothScroll";
+import { useReduce } from "./reveal";
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useSpring, useTransform, type Variants } from "motion/react";
 import { Calendar } from "lucide-react";
@@ -275,6 +277,7 @@ export default function Hero() {
     };
   }, []);
 
+  const reduce = useReduce();
   const { scrollY } = useScroll();
   const s = useSpring(scrollY, { stiffness: 90, damping: 25, mass: 0.6 });
   const yD = useTransform(s, [0, 800], [0, 110]);
@@ -289,7 +292,7 @@ export default function Hero() {
   // The reference targets #welcome-letter, which it never renders; fall back to the section after the hero.
   const explore = () => {
     const el = document.getElementById("welcome-letter") ?? sectionRef.current?.nextElementSibling;
-    el?.scrollIntoView({ behavior: "smooth" });
+    if (el instanceof HTMLElement) scrollToTarget(el);
   };
   const cueProps = {
     onClick: explore,
@@ -316,7 +319,7 @@ export default function Hero() {
 
       {/* Mobile */}
       <div className="md:hidden relative w-full min-h-[100svh] flex flex-col justify-between overflow-hidden">
-        <motion.div style={{ y: yM, scale: scaleM }} className="absolute inset-0 z-0 will-change-transform">
+        <motion.div style={reduce ? undefined : { y: yM, scale: scaleM }} className="absolute inset-0 z-0 will-change-transform">
           <picture className="w-full h-full block">
             <source srcSet="/images/hero/hero-potrait.webp" type="image/webp" />
             { }
@@ -325,7 +328,7 @@ export default function Hero() {
           <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#FAF7F2]/80 via-[#FAF7F2]/30 to-transparent pointer-events-none" />
         </motion.div>
         <motion.div
-          style={{ y: yText, opacity: opText, scale: scaleText }}
+          style={reduce ? { opacity: opText } : { y: yText, opacity: opText, scale: scaleText }}
           variants={C}
           initial="hidden"
           animate={shown ? "visible" : "hidden"}
@@ -405,7 +408,7 @@ export default function Hero() {
 
       {/* Desktop */}
       <div className="hidden md:flex relative w-full min-h-[100svh] items-center overflow-hidden">
-        <motion.div style={{ y: yD, scale: scaleD }} className="absolute inset-0 z-0 will-change-transform">
+        <motion.div style={reduce ? undefined : { y: yD, scale: scaleD }} className="absolute inset-0 z-0 will-change-transform">
           <picture className="w-full h-full block">
             <source srcSet="/images/hero/hero-landscape.webp" type="image/webp" />
             { }
@@ -414,7 +417,7 @@ export default function Hero() {
         </motion.div>
         <div className="relative z-20 w-full max-w-7xl mx-auto px-6 lg:px-12 xl:px-16 flex items-center justify-end py-16">
           <motion.div
-            style={{ y: yText, opacity: opText, scale: scaleText }}
+            style={reduce ? { opacity: opText } : { y: yText, opacity: opText, scale: scaleText }}
             variants={C}
             initial="hidden"
             animate={shown ? "visible" : "hidden"}

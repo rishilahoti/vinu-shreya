@@ -1,13 +1,14 @@
 "use client";
 
 // Copy of the reference footer: monogram, blessing, hashtag card with confetti copy, share/copy/top buttons, address line.
-import { useRef, useState, type MouseEvent } from "react";
-import { motion, AnimatePresence, useInView } from "motion/react";
+import { scrollToTarget } from "./SmoothScroll";
+import { useState, type MouseEvent } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { ArrowUp, Camera, Check, Copy, Heart, MapPin, Share2, Sparkles } from "lucide-react";
 import { invite, waShare } from "@/lib/invite";
 import { useLang } from "./lang";
+import { Parallax, Reveal } from "./reveal";
 
-const ease = [0.16, 1, 0.3, 1] as const;
 const { groom, bride, initials, families, venue, dates, hashtag } = invite;
 // Not in invite.ts: the reference shows a Devanagari hashtag in Hindi with the English one underneath.
 const HASHTAG_HI = "#विनम्रवेड्सश्रेया";
@@ -82,6 +83,8 @@ function BotanicalCornerSprig({ position }: { position: "top-left" | "top-right"
   const u = `url(#goldSprig_${position})`;
   return (
     <div className={`absolute pointer-events-none select-none z-0 ${pos} `}>
+      {/* negative: drifts down as the footer rises, so the sprig never slides up under the clipped top edge */}
+      <Parallax speed={-20}>
       <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-12 sm:w-16 md:w-20 h-auto opacity-45 drop-shadow-[0_1px_4px_rgba(197,155,39,0.18)]">
         <defs>
           <linearGradient id={`goldSprig_${position}`} x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
@@ -104,6 +107,7 @@ function BotanicalCornerSprig({ position }: { position: "top-left" | "top-right"
         <circle cx="74" cy="16" r="1.6" fill="#FFF2B2" />
         <circle cx="116" cy="4" r="1.8" fill="#FFF2B2" />
       </svg>
+      </Parallax>
     </div>
   );
 }
@@ -175,10 +179,6 @@ export default function Footer() {
   const hi = lang === "hi";
   const [linkCopied, setLinkCopied] = useState(false);
   const [tagCopied, setTagCopied] = useState(false);
-  const footerRef = useRef<HTMLElement>(null);
-  const inView = useInView(footerRef, { once: true, margin: "-40px" });
-  const cardRef = useRef<HTMLDivElement>(null);
-  const cardInView = useInView(cardRef, { once: true, margin: "-30px" });
   const tag = hi ? HASHTAG_HI : hashtag;
 
   const copyTag = (e: MouseEvent<HTMLElement>) => {
@@ -216,9 +216,14 @@ ${location.href}`;
   };
 
   return (
-    <footer ref={footerRef} className="relative bg-gradient-to-b from-[#FAF7F2] via-[#FFFDF9] to-[#F5ECE0] py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 border-t border-[#C59B27]/30 text-center overflow-hidden">
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#C59B27]/12 rounded-full blur-[160px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#C59B27_0.6px,transparent_0.6px)] [background-size:24px_24px] opacity-[0.14] pointer-events-none" />
+    <footer className="relative bg-gradient-to-b from-[#FAF7F2] via-[#FFFDF9] to-[#F5ECE0] py-20 sm:py-24 lg:py-28 px-4 sm:px-6 lg:px-8 border-t border-[#C59B27]/30 text-center overflow-hidden">
+      <Parallax speed={70} className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#C59B27]/12 rounded-full blur-[160px] pointer-events-none" />
+      </Parallax>
+      {/* the dot layer overhangs by 48px top and bottom so its edges never show across the 40px travel */}
+      <Parallax speed={40} className="absolute inset-x-0 -inset-y-12 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(#C59B27_0.6px,transparent_0.6px)] [background-size:24px_24px] opacity-[0.14] pointer-events-none" />
+      </Parallax>
       {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
@@ -234,12 +239,7 @@ ${location.href}`;
       <BotanicalCornerSprig position="top-left" />
       <BotanicalCornerSprig position="top-right" />
       <div className="max-w-4xl mx-auto relative z-10">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85, y: 20 }}
-          animate={inView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.85, y: 20 }}
-          transition={{ duration: 0.8, ease }}
-          className="relative inline-block mx-auto mb-6"
-        >
+        <Reveal className="relative inline-block mx-auto mb-6">
           <span className="animate-ping absolute inset-0 rounded-full bg-[#C59B27] opacity-20" />
           <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 40, ease: "linear" }} className="absolute -inset-3 rounded-full border border-dashed border-[#C59B27]/40 pointer-events-none" />
           <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full border-2 border-[#C59B27] bg-gradient-to-br from-[#FFFFFF] via-[#FAF6EE] to-[#F5ECE0] shadow-[0_10px_30px_rgba(138,101,22,0.22)] flex items-center justify-center">
@@ -250,20 +250,23 @@ ${location.href}`;
               <div className="h-0.5 w-6 bg-[#C59B27] mx-auto mt-0.5 rounded-full" />
             </div>
           </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} transition={{ duration: 0.8, delay: 0.15 }}>
+        </Reveal>
+        <div>
+          <Reveal delay={0.08}>
           <p className={`text-xs sm:text-sm uppercase mb-2 font-bold text-[#8A6516] tracking-[0.28em] ${hi ? "font-serif-hi" : "font-cinzel"}`}>{t(copy.blessing)}</p>
+          </Reveal>
+          <Reveal delay={0.16}>
           <h2 className={`text-3xl sm:text-5xl md:text-6xl font-bold text-[#1C1917] tracking-tight leading-tight mb-2 drop-shadow-xs ${hi ? "font-display-hi" : "font-cinzel"}`}>{t(copy.couple)}</h2>
+          </Reveal>
+          <Reveal delay={0.24}>
           <RoyalCelebrationFiligree className="my-3" />
+          </Reveal>
+          <Reveal delay={0.32}>
           <p className={`text-[14.5px] sm:text-base md:text-[17px] text-[#0F172A] max-w-xl mx-auto leading-relaxed mb-8 font-sans font-medium ${hi ? "font-serif-hi" : ""}`}>{t(copy.message)}</p>
-        </motion.div>
-        <div ref={cardRef} className="mb-10 sm:mb-14">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 35 }}
-            animate={cardInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.9, y: 35 }}
-            transition={{ duration: 0.85, ease }}
-            className="relative inline-block max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full mx-auto"
-          >
+          </Reveal>
+        </div>
+        <div className="mb-10 sm:mb-14">
+          <Reveal blur={6} className="relative inline-block max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl w-full mx-auto">
             <motion.div animate={{ scale: [0.95, 1.12, 0.95], opacity: [0.3, 0.75, 0.3] }} transition={{ repeat: Infinity, duration: 3.8, ease: "easeInOut" }} className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#C59B27]/30 via-[#F5D77F]/50 to-[#C59B27]/30 blur-2xl pointer-events-none" />
             <motion.div whileHover={{ scale: 1.015, y: -3 }} transition={{ duration: 0.25 }} className="relative rounded-3xl border border-[#C59B27]/50 bg-gradient-to-b from-[#FFFFFF] via-[#FFFDF9] to-[#FAF5EB] p-4 sm:p-7 md:p-8 shadow-[0_18px_50px_-10px_rgba(197,155,39,0.3)] overflow-hidden group">
               <div className="absolute inset-1.5 rounded-[22px] border border-[#C59B27]/30 pointer-events-none" />
@@ -280,9 +283,8 @@ ${location.href}`;
                   ✦
                 </motion.span>
                 <motion.div
-                  initial={{ opacity: 0, y: 30, scale: 0.9, rotateX: -20 }}
-                  animate={cardInView ? { opacity: 1, y: [0, -6, 0], scale: 1, rotateX: 0 } : { opacity: 0, y: 30, scale: 0.9, rotateX: -20 }}
-                  transition={{ duration: 0.75, ease, y: { repeat: Infinity, duration: 3.4, ease: "easeInOut" } }}
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ repeat: Infinity, duration: 3.4, ease: "easeInOut" }}
                   className="relative max-w-full overflow-hidden pt-2 sm:pt-4 pb-1 sm:pb-2 px-1 flex items-center justify-center"
                 >
                   <h3
@@ -334,9 +336,9 @@ ${location.href}`;
                 </AnimatePresence>
               </div>
             </motion.div>
-          </motion.div>
+          </Reveal>
         </div>
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }} transition={{ duration: 0.7, delay: 0.35 }} className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-12">
+        <Reveal delay={0.08} className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-12">
           <button type="button" onClick={share} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#1E7A4E]/40 bg-[#FFFFFF] hover:bg-[#FAF7F2] text-[#1E7A4E] text-xs sm:text-sm font-sans font-semibold transition-all cursor-pointer shadow-xs hover:shadow-sm hover:-translate-y-0.5">
             <Share2 className="h-4 w-4" />
             <span>{t(copy.share)}</span>
@@ -354,12 +356,12 @@ ${location.href}`;
               </>
             )}
           </button>
-          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#C59B27]/30 bg-[#FAF5EB] hover:bg-[#FFFFFF] text-[#8A6516] text-xs sm:text-sm font-sans font-semibold transition-all cursor-pointer shadow-xs hover:-translate-y-0.5" title="Return to the beginning">
+          <button type="button" onClick={() => scrollToTarget(0)} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#C59B27]/30 bg-[#FAF5EB] hover:bg-[#FFFFFF] text-[#8A6516] text-xs sm:text-sm font-sans font-semibold transition-all cursor-pointer shadow-xs hover:-translate-y-0.5" title="Return to the beginning">
             <ArrowUp className="h-4 w-4" />
             <span>{t(copy.top)}</span>
           </button>
-        </motion.div>
-        <div className="border-t border-[#C59B27]/25 pt-8 text-[12.5px] sm:text-[13.5px] font-sans font-medium text-[#0F172A] flex flex-col sm:flex-row items-center justify-between gap-3">
+        </Reveal>
+        <Reveal delay={0.08} className="border-t border-[#C59B27]/25 pt-8 text-[12.5px] sm:text-[13.5px] font-sans font-medium text-[#0F172A] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-center sm:text-left">
             <MapPin className="w-3.5 h-3.5 text-[#C59B27] shrink-0" />
             <span>{t(copy.address)}</span>
@@ -368,7 +370,7 @@ ${location.href}`;
             <span>{t(copy.crafted)}</span>
             <Heart className="h-3.5 w-3.5 text-[#9B2C47] fill-[#9B2C47]" />
           </div>
-        </div>
+        </Reveal>
       </div>
     </footer>
   );

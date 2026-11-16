@@ -1,8 +1,10 @@
 "use client";
 
 // Copy of the reference's programme section: header, day/chip jump buttons, one full-viewport panel per event.
+import { scrollToTarget } from "./SmoothScroll";
 import { useRef } from "react";
 import { motion, useScroll, useSpring, useTransform, useInView } from "motion/react";
+import { RevealGroup, RevealItem, Parallax, EASE_OUT, useReduce } from "./reveal";
 import { ChevronDown, Clock } from "lucide-react";
 import { invite, type InviteEvent } from "@/lib/invite";
 import { useLang } from "@/components/invite/lang";
@@ -20,7 +22,13 @@ const copy = {
 // invite.ts has no night flag; the evening Ring Ceremony uses the reference's night (Sangeet) art and colours.
 const NIGHT = new Set(["ring"]);
 
-const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+const go = (id: string) => scrollToTarget(`#${id}`);
+
+// Panel text: a light (6px) blur rise; reduced motion keeps only the fade.
+const rise = (reduce: boolean, y: number) => ({
+  hidden: { opacity: 0, y, filter: "blur(6px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: reduce ? { duration: 0.4, y: { duration: 0 }, filter: { duration: 0 } } : { duration: 0.8, ease: EASE_OUT } },
+});
 
 function Marigolds() {
   const leaves = [110, 170, 230, 290, 350, 410, 590, 650, 710, 770, 830, 890];
@@ -142,6 +150,8 @@ function Panel({ event: e, index, total, nextId }: { event: InviteEvent; index: 
   const sM = useTransform(p, [0, 0.5, 1], [1.06, 1.015, 1.06]);
   const yText = useTransform(p, [0, 0.5, 1], [20, 0, -20]);
   const inView = useInView(ref, { once: false, amount: 0.2 });
+  const seen = useInView(ref, { once: true, amount: 0.2 });
+  const reduce = useReduce();
   const night = NIGHT.has(e.id);
   const alt = `${e.name.en} - ${e.hindiLine}`;
   const loading = index === 0 ? "eager" : "lazy";
@@ -151,7 +161,7 @@ function Panel({ event: e, index, total, nextId }: { event: InviteEvent; index: 
 
   return (
     <div ref={ref} id={e.id} className="relative w-full h-[100svh] min-h-[500px] max-h-[1080px] flex flex-col justify-between overflow-hidden select-none border-b border-[#C59B27]/25">
-      <motion.div style={{ y: yM, scale: sM }} className="md:hidden absolute inset-0 z-0 pointer-events-none will-change-transform">
+      <motion.div style={reduce ? undefined : { y: yM, scale: sM }} className="md:hidden absolute inset-0 z-0 pointer-events-none will-change-transform">
         <motion.div animate={inView ? { scale: [1, 1.03, 1] } : {}} transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }} className="w-full h-full">
           <picture className="w-full h-full block">
             <source srcSet={e.art.portrait} type="image/webp" />
@@ -161,7 +171,7 @@ function Panel({ event: e, index, total, nextId }: { event: InviteEvent; index: 
         </motion.div>
         <div className={`absolute inset-x-0 top-0 h-52 min-[360px]:h-60 sm:h-72 pointer-events-none ${veil}`} />
       </motion.div>
-      <motion.div style={{ y: yD, scale: sD }} className="hidden md:block absolute inset-0 z-0 pointer-events-none will-change-transform">
+      <motion.div style={reduce ? undefined : { y: yD, scale: sD }} className="hidden md:block absolute inset-0 z-0 pointer-events-none will-change-transform">
         <motion.div animate={inView ? { scale: [1, 1.03, 1] } : {}} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} className="w-full h-full">
           <picture className="w-full h-full block">
             <source srcSet={e.art.landscape} type="image/webp" />
@@ -173,14 +183,14 @@ function Panel({ event: e, index, total, nextId }: { event: InviteEvent; index: 
       </motion.div>
 
       <motion.div
-        style={{ y: yText }}
+        style={reduce ? undefined : { y: yText }}
         initial="hidden"
-        animate={inView ? "visible" : "hidden"}
-        variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.04 } } }}
+        animate={seen ? "visible" : "hidden"}
+        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.04 } } }}
         className="relative z-20 pt-11 min-[360px]:pt-13 sm:pt-16 md:pt-14 lg:pt-18 px-3 sm:px-6 max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto text-center flex flex-col items-center pointer-events-auto will-change-transform"
       >
         <motion.div
-          variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+          variants={rise(reduce, 14)}
           className={`inline-flex items-center gap-1.5 px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-full border shadow-2xs ${night ? "bg-[#0F172A]/85 border-[#FCD34D]/45 text-[#FDE68A]" : "bg-[#FFFDF9]/95 border-[#C59B27]/45 text-[#78350F]"}`}
         >
           <motion.span animate={{ rotate: [0, 180, 360], scale: [1, 1.25, 1] }} transition={{ duration: 7, repeat: Infinity, ease: "linear" }} className="text-[#C59B27] text-[8px] sm:text-[9px] inline-block">✦</motion.span>
@@ -190,7 +200,7 @@ function Panel({ event: e, index, total, nextId }: { event: InviteEvent; index: 
           <motion.span animate={{ rotate: [360, 180, 0], scale: [1, 1.25, 1] }} transition={{ duration: 7, repeat: Infinity, ease: "linear" }} className="text-[#C59B27] text-[8px] sm:text-[9px] inline-block">✦</motion.span>
         </motion.div>
         <motion.div
-          variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55 } } }}
+          variants={rise(reduce, 14)}
           className={`inline-flex items-center justify-center gap-1.5 my-1 sm:my-1.5 px-2.5 py-0.5 sm:px-3.5 sm:py-1 rounded-full border shadow-2xs ${night ? "bg-[#0F172A]/80 border-[#FCD34D]/35 text-[#FDE68A]" : "bg-[#FFFDF9]/92 border-[#C59B27]/35 text-[#78350F]"}`}
         >
           <motion.div animate={{ rotate: [0, 6, -6, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
@@ -198,7 +208,7 @@ function Panel({ event: e, index, total, nextId }: { event: InviteEvent; index: 
           </motion.div>
           <span className="font-sans font-bold text-[11px] min-[360px]:text-xs sm:text-sm tracking-wide uppercase tabular-nums">{t(e.time)}</span>
         </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="my-0.5 sm:my-1 max-w-lg lg:max-w-2xl">
+        <motion.div variants={rise(reduce, 18)} className="my-0.5 sm:my-1 max-w-lg lg:max-w-2xl">
           <h3
             className={`text-xl min-[360px]:text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-[34px] lg:text-[40px] font-bold tracking-tight leading-[1.15] text-center ${night ? "text-[#FFFDF5] drop-shadow-[0_2px_16px_rgba(0,0,0,0.9)] drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]" : "text-[#2B1304] drop-shadow-[0_2px_12px_rgba(255,255,255,0.95)] drop-shadow-[0_1px_3px_rgba(255,255,255,1)]"} ${hi ? "font-serif-hi" : "font-cinzel"}`}
           >
@@ -242,17 +252,25 @@ export default function Programme() {
 
   return (
     <section id="programme" className="relative w-full bg-[#FAF7F2] text-[#1C1917] overflow-hidden scroll-mt-0 border-t border-[#C59B27]/30">
-      <div className="py-8 sm:py-12 md:py-14 px-4 text-center max-w-4xl mx-auto relative z-10">
-        <Marigolds />
-        <div className="inline-flex items-center gap-2 mb-2 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 border border-[#C59B27]/40 shadow-2xs">
+      <RevealGroup className="py-8 sm:py-12 md:py-14 px-4 text-center max-w-4xl mx-auto relative z-10">
+        <Parallax speed={20}>
+          <Marigolds />
+        </Parallax>
+        <RevealItem className="inline-flex items-center gap-2 mb-2 px-3.5 py-1 rounded-full bg-[#FFFDF9]/95 border border-[#C59B27]/40 shadow-2xs">
           <span className="text-[#C59B27] text-xs">✦</span>
           <span className={`text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.24em] uppercase text-[#8A6516] ${hi ? "font-serif-hi" : "font-cinzel"}`}>{t(copy.pill)}</span>
           <span className="text-[#C59B27] text-xs">✦</span>
-        </div>
-        <h2 className={`text-2xl min-[360px]:text-3xl sm:text-5xl md:text-6xl font-bold text-[#78350F] tracking-tight leading-[1.1] mb-2 ${hi ? "font-display-hi" : "font-cinzel"}`}>{t(copy.title)}</h2>
-        <p className={`text-xs min-[400px]:text-sm sm:text-base text-[#292524] font-medium tracking-wide max-w-2xl mx-auto leading-relaxed ${hi ? "font-serif-hi" : "font-serif"}`}>{t(copy.intro)}</p>
-        <Filigree className="my-2.5 sm:my-3.5 opacity-85" />
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 mt-3 sm:mt-4">
+        </RevealItem>
+        <RevealItem>
+          <h2 className={`text-2xl min-[360px]:text-3xl sm:text-5xl md:text-6xl font-bold text-[#78350F] tracking-tight leading-[1.1] mb-2 ${hi ? "font-display-hi" : "font-cinzel"}`}>{t(copy.title)}</h2>
+        </RevealItem>
+        <RevealItem>
+          <p className={`text-xs min-[400px]:text-sm sm:text-base text-[#292524] font-medium tracking-wide max-w-2xl mx-auto leading-relaxed ${hi ? "font-serif-hi" : "font-serif"}`}>{t(copy.intro)}</p>
+        </RevealItem>
+        <RevealItem blur={4}>
+          <Filigree className="my-2.5 sm:my-3.5 opacity-85" />
+        </RevealItem>
+        <RevealItem className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 mt-3 sm:mt-4">
           <button
             type="button"
             onClick={() => go(dayStart[0])}
@@ -267,8 +285,8 @@ export default function Programme() {
           >
             {t(invite.dates.days[1])}
           </button>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2 sm:mt-2.5">
+        </RevealItem>
+        <RevealItem className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-2 sm:mt-2.5">
           {events.map((e, i) => (
             <button
               key={e.id}
@@ -280,8 +298,8 @@ export default function Programme() {
               <span>{t(e.chip)}</span>
             </button>
           ))}
-        </div>
-      </div>
+        </RevealItem>
+      </RevealGroup>
       <div className="w-full flex flex-col">
         {events.map((e, i) => (
           <Panel key={e.id} event={e} index={i} total={events.length} nextId={events[i + 1]?.id ?? "dress-code"} />
