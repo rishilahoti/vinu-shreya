@@ -25,7 +25,6 @@ export const invite = {
   invocation: { en: "॥ SHREE GANESHAY NAMAH ॥", hi: "॥ श्री गणेशाय नमः ॥" },
   groom: { en: "Vinamra", hi: "विनम्र", full: "Vinamra Rathi" },
   bride: { en: "Shreya", hi: "श्रेया", full: "Shreya Ladha" },
-  initials: { groom: "V", bride: "S" },
   families: { en: "Rathi & Ladha", hi: "राठी एवं लड्ढा" },
   // First ceremony, IST. Gate and timeline countdowns run to this.
   startsAt: "2027-02-01T10:00:00+05:30",

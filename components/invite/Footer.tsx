@@ -9,7 +9,7 @@ import { invite, waShare } from "@/lib/invite";
 import { useLang } from "./lang";
 import { Parallax, Reveal } from "./reveal";
 
-const { groom, bride, initials, families, venue, dates, hashtag } = invite;
+const { groom, bride, families, venue, dates, hashtag } = invite;
 // Not in invite.ts: the reference shows a Devanagari hashtag in Hindi with the English one underneath.
 const HASHTAG_HI = "#विनम्रवेड्सश्रेया";
 const deva = (s: string) => s.replace(/\d/g, (d) => "०१२३४५६७८९"[+d]);
@@ -243,12 +243,8 @@ ${location.href}`;
           <span className="animate-ping absolute inset-0 rounded-full bg-[#C59B27] opacity-20" />
           <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 40, ease: "linear" }} className="absolute -inset-3 rounded-full border border-dashed border-[#C59B27]/40 pointer-events-none" />
           <div className="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full border-2 border-[#C59B27] bg-gradient-to-br from-[#FFFFFF] via-[#FAF6EE] to-[#F5ECE0] shadow-[0_10px_30px_rgba(138,101,22,0.22)] flex items-center justify-center">
-            <div className="text-center">
-              <span className="font-cinzel text-xl sm:text-2xl font-bold tracking-widest text-[#8A6516] drop-shadow-xs">
-                {initials.groom} &amp; {initials.bride}
-              </span>
-              <div className="h-0.5 w-6 bg-[#C59B27] mx-auto mt-0.5 rounded-full" />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/logo/shravi-mark.webp" alt={`${groom.en} & ${bride.en} monogram`} width={860} height={935} style={{ height: "78%", width: "auto" }} loading="lazy" decoding="async" />
           </div>
         </Reveal>
         <div>

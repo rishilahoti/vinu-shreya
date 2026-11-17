@@ -170,10 +170,11 @@ export default function Gate({ onComplete }: { onComplete?: () => void }) {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-52 min-[360px]:w-60 min-[400px]:w-68 sm:w-76 md:w-84 aspect-[857/1065] my-0.5 sm:my-1 max-h-[35vh] sm:max-h-[40vh] shrink filter drop-shadow-[0_6px_22px_rgba(138,101,22,0.28)] mx-auto flex items-center justify-center"
+              style={{ aspectRatio: "860 / 935" }}
+              className="relative w-52 min-[360px]:w-60 min-[400px]:w-68 sm:w-76 md:w-84 my-0.5 sm:my-1 max-h-[35vh] sm:max-h-[40vh] shrink filter drop-shadow-[0_6px_22px_rgba(138,101,22,0.28)] mx-auto flex items-center justify-center"
             >
               <Image
-                src="/images/background-images/entry-couple-logo-vs.webp"
+                src="/images/logo/shravi-mark.webp"
                 alt={`${invite.groom.en} & ${invite.bride.en} Wedding Logo`}
                 fill
                 preload
